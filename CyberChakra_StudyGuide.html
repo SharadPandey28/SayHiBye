@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberChakra — Interview Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06080f;
+  --surface: #0d1221;
+  --surface2: #131929;
+  --border: rgba(0,212,255,0.12);
+  --border2: rgba(0,212,255,0.25);
+  --cyan: #00d4ff;
+  --purple: #8b5cf6;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --pink: #ec4899;
+  --orange: #f97316;
+  --white: #f0f4ff;
+  --gray: #64748b;
+  --light: #94a3b8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--white);font-family:'Inter',sans-serif;font-size:15px;line-height:1.7;min-height:100vh}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#06080f 0%,#0d1530 50%,#06080f 100%);border-bottom:1px solid var(--border2);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0%,transparent 70%);pointer-events:none}
+.header::after{content:'';position:absolute;bottom:-40px;left:30%;width:200px;height:200px;background:radial-gradient(circle,rgba(0,212,255,0.08) 0%,transparent 70%);pointer-events:none}
+.header-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);letter-spacing:3px;margin-bottom:0.75rem;opacity:0.8}
+.header h1{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;line-height:1.1;margin-bottom:0.5rem}
+.header h1 span{color:var(--cyan)}
+.header-sub{color:var(--light);font-size:13px;max-width:600px;font-weight:300}
+.header-stats{display:flex;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap}
+.stat{display:flex;align-items:center;gap:8px}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan)}
+.stat-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+
+/* NAV */
+.nav{display:flex;gap:4px;padding:1rem 2rem;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.nav-btn{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--light);cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav-btn:hover{border-color:var(--border2);color:var(--white)}
+.nav-btn.active{background:rgba(0,212,255,0.1);border-color:var(--cyan);color:var(--cyan)}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:2rem}
+
+/* SECTION */
+.section{display:none}
+.section.active{display:block}
+
+/* SLIDE CARD */
+.slide-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:1.5rem;overflow:hidden}
+.slide-header{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.slide-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);padding:3px 10px;border-radius:4px;white-space:nowrap}
+.slide-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;flex:1}
+.slide-toggle{font-size:18px;color:var(--gray);transition:transform .3s}
+.slide-body{padding:1.5rem;display:none}
+.slide-body.open{display:block}
+
+/* CONTENT BLOCKS */
+.what-block{background:rgba(0,212,255,0.05);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin-bottom:1rem}
+.what-block h4{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:0.5rem}
+.what-block p{color:var(--light);font-size:14px}
+
+.explain-block{background:rgba(139,92,246,0.06);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin-bottom:1rem}
+.explain-block h4{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:2px;margin-bottom:0.5rem}
+.explain-block p{color:var(--light);font-size:14px}
+
+.say-block{background:rgba(16,185,129,0.06);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin-bottom:1rem}
+.say-block h4{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:0.5rem}
+.say-block p{color:var(--light);font-size:14px;font-style:italic}
+
+.warn-block{background:rgba(245,158,11,0.06);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin-bottom:1rem}
+.warn-block h4{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;margin-bottom:0.5rem}
+.warn-block p{color:var(--light);font-size:14px}
+
+.key-point{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.key-point:last-child{border-bottom:none}
+.key-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);margin-top:7px;flex-shrink:0}
+.key-point p{color:var(--light);font-size:14px}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:1rem 0}
+.flow-step{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan)}
+.flow-arrow{color:var(--gray);font-size:16px}
+
+/* TOOL CARDS */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-top:1rem}
+.tool-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;transition:border-color .2s}
+.tool-card:hover{border-color:var(--border2)}
+.tool-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem}
+.tool-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.tool-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500;font-family:'JetBrains Mono',monospace}
+.tb-fuzz{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3)}
+.tb-emul{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3)}
+.tb-hw{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3)}
+.tb-anal{background:rgba(0,212,255,0.15);color:var(--cyan);border:1px solid rgba(0,212,255,0.3)}
+.tb-cap{background:rgba(100,116,139,0.2);color:var(--light);border:1px solid rgba(100,116,139,0.3)}
+.tool-org{font-size:11px;color:var(--gray);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace}
+.tool-what{font-size:13px;color:var(--light);margin-bottom:0.75rem;line-height:1.6}
+.tool-how-title{font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;letter-spacing:2px;margin-bottom:6px}
+.tool-step{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:12px;color:var(--gray)}
+.tool-step-n{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);border-radius:3px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);flex-shrink:0}
+.tool-interview{background:rgba(16,185,129,0.06);border-radius:6px;padding:8px 12px;margin-top:10px;font-size:12px;color:var(--green);border:1px solid rgba(16,185,129,0.15)}
+.tool-interview strong{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;margin-bottom:3px}
+
+/* CHAIN DIAGRAM */
+.chain{display:flex;flex-direction:column;gap:0}
+.chain-step{display:flex;gap:1rem;align-items:stretch}
+.chain-left{display:flex;flex-direction:column;align-items:center;gap:0}
+.chain-circle{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;flex-shrink:0}
+.chain-line{width:2px;flex:1;min-height:16px}
+.chain-content{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;flex:1;margin-bottom:12px}
+.chain-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px}
+.chain-what{font-size:13px;color:var(--light);margin-bottom:6px}
+.chain-why{font-size:12px;padding:6px 10px;border-radius:5px;background:rgba(0,0,0,0.3)}
+
+/* LAYER DIAGRAM */
+.layers{display:flex;flex-direction:column;gap:6px;margin:1rem 0}
+.layer{border-radius:6px;padding:10px 16px;border:1px solid transparent;transition:all .2s;cursor:default}
+.layer:hover{filter:brightness(1.1)}
+.layer-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px}
+.layer-desc{font-size:12px;opacity:0.8}
+
+/* VULN CARDS */
+.vuln-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-top:1rem}
+.vuln-card{border-radius:8px;padding:1.1rem;border:1px solid transparent}
+.vuln-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.vuln-how{font-size:13px;line-height:1.6;margin-bottom:8px}
+.vuln-code{font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px;border-radius:4px;background:rgba(0,0,0,0.3);margin-bottom:8px;line-height:1.5}
+.vuln-def{font-size:11px;opacity:0.7;font-style:italic}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin:1rem 0}
+.pipe-step{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+.pipe-n{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;margin-bottom:4px}
+.pipe-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:4px}
+.pipe-tool{font-size:11px;color:var(--gray)}
+
+/* TAGS */
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:0.5rem}
+.tag{font-size:11px;padding:3px 10px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+
+/* INTERVIEW TIPS SECTION */
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.tip-q{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--amber);margin-bottom:0.75rem;display:flex;gap:10px;align-items:flex-start}
+.tip-q::before{content:'Q';font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(245,158,11,0.15);color:var(--amber);padding:3px 8px;border-radius:4px;flex-shrink:0;margin-top:2px}
+.tip-a{color:var(--light);font-size:14px;padding-left:1.5rem;line-height:1.7}
+.tip-a strong{color:var(--white)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:3px}
+
+/* UTILITY */
+.mt1{margin-top:0.75rem}
+.mt2{margin-top:1.25rem}
+.bold{color:var(--white);font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">// CYBERCHAKRA STUDY GUIDE — INTERVIEW PREP</div>
+  <h1>Android Security<br><span>Research</span> — Deep Dive</h1>
+  <p class="header-sub">Everything you need to explain every slide, every tool, and every concept confidently to a judge or interviewer.</p>
+  <div class="header-stats">
+    <div class="stat"><span class="stat-val">14</span><span class="stat-label">Slides Covered</span></div>
+    <div class="stat"><span class="stat-val">12</span><span class="stat-label">Tools Explained</span></div>
+    <div class="stat"><span class="stat-val">5</span><span class="stat-label">Attack Steps</span></div>
+    <div class="stat"><span class="stat-val">6</span><span class="stat-label">Defense Layers</span></div>
+  </div>
+</div>
+
+<div class="nav" id="nav">
+  <button class="nav-btn active" onclick="showSection('slides',this)">📊 All Slides</button>
+  <button class="nav-btn" onclick="showSection('tools',this)">🔧 Tools Deep Dive</button>
+  <button class="nav-btn" onclick="showSection('chain',this)">⛓ Attack Chain</button>
+  <button class="nav-btn" onclick="showSection('vulns',this)">💥 Vuln Classes</button>
+  <button class="nav-btn" onclick="showSection('defense',this)">🛡 Defenses</button>
+  <button class="nav-btn" onclick="showSection('interview',this)">🎤 Interview Q&A</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════ SLIDES SECTION ══════════════════ -->
+<div class="section active" id="sec-slides">
+
+  <!-- SLIDE 1 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 01</span>
+      <span class="slide-title">Title Slide — Android Security Research</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>The title, research tagline, and three key statistics: Android 11–13 target, 5-step attack chain, 6 security layers.</p></div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"Our research investigates whether root-level access can be achieved on a locked Android device purely through a USB connection — without any modification to the device, and without the user doing anything at all. We'll walk you through the security architecture that makes this hard, the theoretical attack chain, and our mitigation recommendations."</p></div>
+      <div class="explain-block"><h4>WHY THESE STATS MATTER</h4><p><span class="bold">Android 11–13</span> — These are current versions with the strongest security. Demonstrating research on these shows relevance.<br><br><span class="bold">5-step chain</span> — Shows you understand it's not one trick. Each step is separate, which makes it hard.<br><br><span class="bold">6 layers</span> — Shows you understand Android's defense-in-depth architecture, not just surface-level hacking concepts.</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 02</span>
+      <span class="slide-title">Agenda — 9 Topics</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>A 9-topic agenda grid showing the logical flow: understand → analyze → attack → defend → disclose.</p></div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"We've structured this as a complete security research workflow — starting from understanding the problem and Android's architecture, through identifying attack surfaces, designing the attack chain, and finishing with mitigations and responsible disclosure."</p></div>
+      <div class="explain-block"><h4>KEY INSIGHT FOR INTERVIEWER</h4><p>The agenda itself shows structured thinking. Say: <em>"Notice the flow mirrors how a real security researcher approaches a problem — you don't start by hacking, you start by understanding the system."</em></p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 03</span>
+      <span class="slide-title">Problem Understanding — Objective, Constraints, Reframed Goal</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>The objective box, 5 hard constraints (4 red ✕, 1 green ✓), and an explanation of why the goal must be reframed.</p></div>
+      <div class="explain-block"><h4>EXPLAIN EACH CONSTRAINT IN DETAIL</h4>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">No ROM modification</span> — The device's firmware/OS cannot be changed. This rules out Magisk, KernelSU, and any flashing-based root methods.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">No storage writes</span> — We cannot write files to the device storage. This rules out dropping payloads or modifying config files.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">No hardware disassembly</span> — We cannot open the phone or access hardware debug pads (JTAG, test points).</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">No user action</span> — The user cannot enable developer mode, approve ADB dialogs, or unlock the bootloader. Device is fully stock.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Works on Android 11+ across 2 OEM families</span> — Must be somewhat general, not just one very specific device.</p></div>
+      </div>
+      <div class="warn-block"><h4>THE REFRAMED GOAL — VERY IMPORTANT</h4><p>Because File-Based Encryption (FBE) encrypts all user data and keys are stored in the TEE (hardware), directly "accessing files" is impossible. Instead, the correct goal is: <span class="bold">"Demonstrate a vulnerability chain that theoretically leads to privileged code execution."</span> This is what real security researchers do — demonstrate possibility and impact, not necessarily achieve full data exfiltration.</p></div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"The challenge explicitly forbids every traditional rooting method. This forces us to think purely about exploitation — finding a flaw in the system that can be triggered from outside without any cooperation from the device or its owner. The reframed goal is demonstrating a realistic vulnerability path, which is the standard in professional security research."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 04</span>
+      <span class="slide-title">Android Security Architecture — 6 Layers</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>A layered pyramid of Android's 5 main layers + SELinux cutting across all + three extra protections at the bottom.</p></div>
+      <div class="layers">
+        <div class="layer" style="background:rgba(29,78,216,0.15);border-color:rgba(29,78,216,0.4)">
+          <div class="layer-title" style="color:#60a5fa">Layer 1 — Application Sandbox</div>
+          <div class="layer-desc" style="color:#93c5fd">Every app gets a unique Linux UID. App A literally cannot read App B's memory — the kernel enforces this. Apps declare permissions in their manifest; users grant them at runtime. Your Facebook app cannot access your banking app's data.</div>
+        </div>
+        <div class="layer" style="background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.4)">
+          <div class="layer-title" style="color:#a78bfa">Layer 2 — Android Framework (Java API)</div>
+          <div class="layer-desc" style="color:#c4b5fd">High-level services: ActivityManager (what's running), PackageManager (app installs), WindowManager (screen). All app-to-service calls go through Binder IPC. If your app doesn't have a permission, the framework rejects the call before it even reaches the service.</div>
+        </div>
+        <div class="layer" style="background:rgba(15,118,110,0.15);border-color:rgba(15,118,110,0.4)">
+          <div class="layer-title" style="color:#34d399">Layer 3 — ART Runtime + Native Libraries</div>
+          <div class="layer-desc" style="color:#6ee7b7">ART compiles and runs app bytecode. Native libraries (libstagefright for media, OpenSSL for crypto, SQLite) are written in C/C++. These process untrusted input — media files, network data. Stagefright (2015) was a famous bug here: a malformed MP4 triggered a buffer overflow in the media library.</div>
+        </div>
+        <div class="layer" style="background:rgba(180,83,9,0.15);border-color:rgba(180,83,9,0.4)">
+          <div class="layer-title" style="color:#fbbf24">Layer 4 — Hardware Abstraction Layer (HAL)</div>
+          <div class="layer-desc" style="color:#fde68a">OEM-specific code that bridges hardware to Android. Each manufacturer writes their own HAL. Quality varies — this is why Samsung phones behave differently from Pixel phones at the hardware interface level. HAL bugs can expose hardware-level privileges.</div>
+        </div>
+        <div class="layer" style="background:rgba(185,28,28,0.2);border-color:rgba(185,28,28,0.5)">
+          <div class="layer-title" style="color:#f87171">Layer 5 — Linux Kernel ⚡ CRITICAL TARGET</div>
+          <div class="layer-desc" style="color:#fca5a5">Controls everything: memory allocation, process scheduling, ALL hardware including USB. Kernel code runs with the highest privilege possible. A bug here means the attacker controls everything — there's nothing more privileged above the kernel. This is why kernel exploits are the most severe category.</div>
+        </div>
+      </div>
+      <div class="warn-block"><h4>SELINUX — THE CROSS-CUTTING CONTROL</h4><p>SELinux applies on top of ALL layers. Even if you become root (UID 0), SELinux can still block specific actions based on policy labels. This is why modern exploits need a separate "SELinux bypass" step — getting root isn't enough on its own.</p></div>
+      <div class="warn-block"><h4>THREE EXTRA PROTECTIONS</h4><p><span class="bold">Verified Boot</span> — Cryptographically checks each partition at startup. Modified system files are detected.<br><span class="bold">FBE</span> — User data encrypted. Keys derived from PIN + hardware secrets in TEE.<br><span class="bold">TEE</span> — Trusted Execution Environment: a physically separate processor that holds crypto keys. Even root cannot extract them directly.</p></div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"Android uses layered defense — each layer is independently designed to stop different attacks. For an attacker to get root access via USB, they need to bypass every relevant layer. This is what makes it hard and why the research is interesting — you must chain multiple weaknesses together."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 05</span>
+      <span class="slide-title">USB Attack Surface — Why USB is the Target</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>USB communication flow diagram, 3 attackable points, and 4 USB input types (HID, MTP, Networking, Composite).</p></div>
+      <div class="explain-block"><h4>WHY USB IS POWERFUL — THE KEY INSIGHT</h4><p>When you connect a USB device to Android, the kernel's USB subsystem <span class="bold">automatically loads the appropriate driver</span>. This happens at kernel level, BEFORE the lockscreen checks anything, BEFORE any permission dialog appears. The kernel must parse the USB descriptor packets to identify the device — and that parsing happens in C code with full kernel privileges.</p></div>
+
+      <div class="explain-block"><h4>USB COMMUNICATION FLOW — EXPLAIN EACH STEP</h4>
+        <div class="flow">
+          <span class="flow-step">USB Device</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Sends Descriptors</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Android Loads Driver</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Data Exchange</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Kernel Processing</span>
+        </div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Step 1 — USB Device connects:</span> Physical connection made. Power flows. Nothing has happened yet software-wise.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Step 2 — Sends Descriptors:</span> Every USB device sends "descriptor packets" — small data structures identifying what kind of device it is (keyboard, storage, phone charger). This is mandatory in the USB protocol. The kernel must receive and parse these.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Step 3 — Android Loads Driver:</span> Based on descriptor parsing, the kernel selects and loads the appropriate driver. This is automatic — no user involvement. The driver runs in kernel space with full privileges.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Step 4 — Data Exchange begins:</span> Driver and device communicate using their protocol (MTP for files, HID for keyboard, etc.).</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Step 5 — Kernel Processing:</span> Everything is processed inside the kernel. Any bug here has maximum impact.</p></div>
+      </div>
+
+      <div class="warn-block"><h4>3 ATTACKABLE POINTS</h4>
+        <div class="key-point"><div class="key-dot" style="background:var(--red)"></div><p><span class="bold">Device Descriptors:</span> Send invalid, oversized, or malformed descriptors. The driver must parse them. If parsing is buggy — overflow happens before any data transfer even begins.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--amber)"></div><p><span class="bold">MTP Protocol Parsing:</span> MTP uses structured packet headers with length fields. If the driver doesn't validate that the declared length matches actual data, a crafted packet overflows the receiving buffer inside the kernel MTP handler.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--purple)"></div><p><span class="bold">State Machine Attacks:</span> USB has a defined sequence of states (connect → enumerate → configure → transfer). Sending commands out of sequence can trigger unhandled states — the driver code doesn't know what to do and behaves unexpectedly.</p></div>
+      </div>
+
+      <div class="explain-block"><h4>4 USB INPUT TYPES</h4>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">HID (Human Interface Device):</span> Pretends to be a keyboard or mouse. Can inject keystrokes — but limited on locked device because the lockscreen intercepts input. Useful as a support vector only.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">MTP (Media Transfer Protocol):</span> Used for file transfer between phone and PC. Has complex packet parsing at kernel level. Historically the highest-risk protocol for driver bugs.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">USB Networking:</span> Device appears as a USB Ethernet adapter. Can inject network packets — useful for network-level attacks if combined with another vector.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Composite Device:</span> Device presents multiple interfaces simultaneously (e.g. keyboard + storage + network at once). Complex to handle, more driver code paths, larger attack surface.</p></div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"USB is our primary target because it's the one external input that reaches the kernel before the security model fully applies. The moment a USB device connects, the kernel starts processing its descriptor — in C code, at kernel privilege. That's the window we're interested in."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 06</span>
+      <span class="slide-title">Vulnerability Classes — 4 Types of Memory Bugs</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>Four memory vulnerability classes: Buffer Overflow, Use-After-Free, Race Condition, Integer Overflow — each with how it works, defense, and impact.</p></div>
+      <div class="vuln-grid">
+        <div class="vuln-card" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.3)">
+          <div class="vuln-title" style="color:#f87171">Buffer Overflow</div>
+          <div class="vuln-how" style="color:var(--light)">A driver allocates a fixed buffer — say 64 bytes. When it copies USB input data into that buffer, it doesn't check if the input is larger than 64 bytes. If input is 200 bytes, the extra 136 bytes overflow into adjacent memory — overwriting whatever is stored there, including function pointers.</div>
+          <div class="vuln-code" style="color:#f87171">char buf[64];<br>// DANGEROUS: no length check<br>memcpy(buf, usb_data, usb_len);<br>// if usb_len=200 → overflow!</div>
+          <div class="vuln-def" style="color:var(--gray)">Impact: Control execution flow. Defense: Stack canaries, bounds checking, ASLR, safe APIs.</div>
+        </div>
+        <div class="vuln-card" style="background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.3)">
+          <div class="vuln-title" style="color:#a78bfa">Use-After-Free (UAF)</div>
+          <div class="vuln-how" style="color:var(--light)">Memory is allocated, used, then freed. But the pointer variable still holds the old address. If an attacker can allocate their own controlled data into that freed memory region before the dangling pointer is used again, the program reads attacker data instead of legitimate data — and may call attacker-controlled function pointers.</div>
+          <div class="vuln-code" style="color:#a78bfa">free(obj);<br>// attacker fills freed memory<br>obj->func_ptr(); // calls attacker code!</div>
+          <div class="vuln-def" style="color:var(--gray)">Impact: Hijack vtable / function pointer. Defense: Pointer nullification, heap isolation, memory-safe languages.</div>
+        </div>
+        <div class="vuln-card" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3)">
+          <div class="vuln-title" style="color:#fbbf24">Race Condition (TOCTOU)</div>
+          <div class="vuln-how" style="color:var(--light)">Time-of-Check to Time-of-Use. A security check runs at time T1 and passes. But between T1 and when the action actually happens (T2), an attacker running a parallel thread changes the state. The check result is now invalid but the action proceeds as if it passed.</div>
+          <div class="vuln-code" style="color:#fbbf24">if (check_permission()) { // T1: PASS<br>  // attacker changes state HERE<br>  do_privileged_action(); // T2: bypass!</div>
+          <div class="vuln-def" style="color:var(--gray)">Impact: Bypass security validation. Defense: Mutex locks, atomic operations, kernel spinlocks.</div>
+        </div>
+        <div class="vuln-card" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3)">
+          <div class="vuln-title" style="color:#34d399">Integer Overflow</div>
+          <div class="vuln-how" style="color:var(--light)">A size calculation multiplies user-controlled values. If the result exceeds the maximum integer size, it wraps around to a tiny number. A tiny allocation is made, but data sized by the original large value is written into it — causing a buffer overflow as a second step.</div>
+          <div class="vuln-code" style="color:#34d399">// count=65536, size=65536<br>int total = count * size;<br>// wraps to 0 → tiny alloc<br>// write 4GB into 0 bytes!</div>
+          <div class="vuln-def" style="color:var(--gray)">Impact: Leads to buffer overflow. Defense: Integer overflow checks, compiler flags, safe math libraries.</div>
+        </div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"All four vulnerability classes exist because USB drivers are written in C, which has no automatic memory safety. The programmer must manually check every input length, every pointer lifetime, every arithmetic result. One missed check in millions of lines of code is enough."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 07</span>
+      <span class="slide-title">Attack Chain — 5-Step Proof of Concept</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>The 5-step attack chain with a "what happens" column and a "why this matters" column for each step.</p></div>
+      <div class="explain-block"><h4>THE MOST IMPORTANT CONCEPT — READ THIS CAREFULLY</h4><p>The chain has <span class="bold">two columns per step</span>. Left = what the attacker does. Right = why that step is significant. When explaining to an interviewer, always say BOTH — the action AND the reason it matters. This shows depth of understanding.</p></div>
+      <div class="chain">
+        <div class="chain-step">
+          <div class="chain-left"><div class="chain-circle" style="background:rgba(0,212,255,0.15);color:var(--cyan);border:2px solid var(--cyan)">01</div><div class="chain-line" style="background:linear-gradient(var(--cyan),#06B6D4)"></div></div>
+          <div class="chain-content" style="border-color:rgba(0,212,255,0.3)">
+            <div class="chain-title" style="color:var(--cyan)">USB Connection</div>
+            <div class="chain-what">A malicious USB device is connected to the locked Android phone.</div>
+            <div class="chain-why" style="color:var(--cyan);border-left:2px solid var(--cyan)"><strong>Why this matters:</strong> USB descriptor parsing happens at kernel level BEFORE the lockscreen or any permission check. The kernel must identify the device — no way to skip this. The phone has no choice but to process the connection.</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-left"><div class="chain-circle" style="background:rgba(6,182,212,0.15);color:#06B6D4;border:2px solid #06B6D4">02</div><div class="chain-line" style="background:linear-gradient(#06B6D4,var(--purple))"></div></div>
+          <div class="chain-content" style="border-color:rgba(6,182,212,0.3)">
+            <div class="chain-title" style="color:#06B6D4">Crafted Input Injection</div>
+            <div class="chain-what">The attacker device sends malformed USB descriptors or MTP packets with invalid length fields.</div>
+            <div class="chain-why" style="color:#06B6D4;border-left:2px solid #06B6D4"><strong>Why this matters:</strong> The kernel USB driver processes this in C code with no automatic bounds checking. A crafted length field that exceeds the buffer size creates a memory corruption opportunity.</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-left"><div class="chain-circle" style="background:rgba(139,92,246,0.15);color:var(--purple);border:2px solid var(--purple)">03</div><div class="chain-line" style="background:linear-gradient(var(--purple),var(--amber))"></div></div>
+          <div class="chain-content" style="border-color:rgba(139,92,246,0.3)">
+            <div class="chain-title" style="color:var(--purple)">Vulnerability Triggered</div>
+            <div class="chain-what">The malformed input hits an unchecked buffer copy or state machine flaw in the driver.</div>
+            <div class="chain-why" style="color:var(--purple);border-left:2px solid var(--purple)"><strong>Why this matters:</strong> Memory adjacent to the buffer is overwritten — potentially including function pointers or kernel data structures that control execution flow. The attacker now has influence over the kernel's behavior.</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-left"><div class="chain-circle" style="background:rgba(245,158,11,0.15);color:var(--amber);border:2px solid var(--amber)">04</div><div class="chain-line" style="background:linear-gradient(var(--amber),var(--red))"></div></div>
+          <div class="chain-content" style="border-color:rgba(245,158,11,0.3)">
+            <div class="chain-title" style="color:var(--amber)">Kernel Code Execution</div>
+            <div class="chain-what">The overwritten function pointer is called → CPU jumps to attacker-controlled memory → attacker code runs.</div>
+            <div class="chain-why" style="color:var(--amber);border-left:2px solid var(--amber)"><strong>Why this matters:</strong> Code is now running in kernel context — the most privileged execution environment. The attacker can now read/write any kernel data structure, including the process credential structure.</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-left"><div class="chain-circle" style="background:rgba(239,68,68,0.15);color:var(--red);border:2px solid var(--red)">05</div></div>
+          <div class="chain-content" style="border-color:rgba(239,68,68,0.3)">
+            <div class="chain-title" style="color:var(--red)">Privilege Escalation</div>
+            <div class="chain-what">The kernel credential structure (task_struct → cred → uid) is modified to UID = 0.</div>
+            <div class="chain-why" style="color:var(--red);border-left:2px solid var(--red)"><strong>Why this matters:</strong> The process is now root. BUT — SELinux still applies. Getting UID 0 is not the end. A SELinux policy bypass is a separate, additional step required for unrestricted access. This is a critical distinction.</div>
+          </div>
+        </div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"Each step in this chain is necessary — skip one and the next is impossible. That's exactly why Android's defense-in-depth works: you must defeat 4 to 5 separate mitigations, each designed to stop a different attack class. This chain is theoretically viable under specific conditions — a known unpatched vulnerability in the USB driver — which is why the research focuses on identifying those conditions."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 08</span>
+      <span class="slide-title">Tools & Research Methodology</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>6 core research tools organized by category: Facedancer (USB emulation), Ghidra (static analysis), Frida (dynamic analysis), ADB (device interface), ExploitDB (vulnerability research), dmesg/lsusb (observation).</p></div>
+      <div class="explain-block"><h4>HOW THE TOOLS FIT TOGETHER AS A PIPELINE</h4>
+        <div class="pipeline">
+          <div class="pipe-step" style="border-color:rgba(0,212,255,0.3)"><div class="pipe-n" style="color:var(--cyan)">1</div><div class="pipe-title">Understand</div><div class="pipe-tool">ADB + dmesg + lsusb</div></div>
+          <div class="pipe-step" style="border-color:rgba(139,92,246,0.3)"><div class="pipe-n" style="color:var(--purple)">2</div><div class="pipe-title">Find Bug</div><div class="pipe-tool">Ghidra + ExploitDB</div></div>
+          <div class="pipe-step" style="border-color:rgba(245,158,11,0.3)"><div class="pipe-n" style="color:var(--amber)">3</div><div class="pipe-title">Deliver Input</div><div class="pipe-tool">Facedancer</div></div>
+          <div class="pipe-step" style="border-color:rgba(16,185,129,0.3)"><div class="pipe-n" style="color:var(--green)">4</div><div class="pipe-title">Verify Trigger</div><div class="pipe-tool">Frida + dmesg</div></div>
+        </div>
+      </div>
+      <div class="warn-block"><h4>EXPLAIN EACH TOOL IN DETAIL</h4>
+        <div class="key-point"><div class="key-dot" style="background:var(--cyan)"></div><p><span class="bold">Facedancer:</span> Python library that turns a Raspberry Pi/laptop into ANY USB device. You write Python code describing how your device behaves — its descriptor, responses, data. Facedancer sends actual USB signals via GreatFET hardware. Used to deliver crafted descriptors to the target.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--purple)"></div><p><span class="bold">Ghidra:</span> NSA open-source reverse engineering tool. Decompiles kernel driver binaries to pseudo-C code. You look for dangerous patterns: memcpy without length checks, user-controlled size values, unchecked pointer dereferences. It's the tool you use to READ the driver code and FIND the bug before triggering it.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--green)"></div><p><span class="bold">Frida:</span> Injects JavaScript into a running Android process. You hook a function and every time it's called, you see the arguments. Used AFTER finding a bug in Ghidra to CONFIRM the bug is reachable at runtime — "does my crafted USB input actually reach this vulnerable function?"</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--amber)"></div><p><span class="bold">ADB (Android Debug Bridge):</span> Official Google tool for communicating with Android devices. Used in Phase 1 on an unlocked test device to explore the filesystem, understand structure, compare behavior when locked vs unlocked. NOT part of the attack — purely for research understanding.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--red)"></div><p><span class="bold">ExploitDB / CVE databases:</span> Public database of disclosed vulnerabilities. Search for "Android USB kernel CVE" to find past bugs — learn what components were affected, how bugs were found, what the patch looked like. This guides where to look for new bugs.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--gray)"></div><p><span class="bold">dmesg / lsusb:</span> Linux kernel log tools. When you connect a USB device, dmesg shows exactly which driver loaded, what errors occurred, and any crashes. lsusb shows all connected devices. These are your observation window into kernel behavior.</p></div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"These tools form a complete research pipeline. You start with ADB to understand normal behavior, use Ghidra to find the dangerous code statically, Facedancer to deliver the crafted input to the target, and Frida plus dmesg to verify what actually happens at runtime. No single tool does everything — they work as a chain."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 09</span>
+      <span class="slide-title">Three-Phase Research Methodology</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>Three phases: System Understanding → Attack Surface Discovery → PoC Design. Each phase has 6 steps and outputs directly feeding the next phase.</p></div>
+      <div class="explain-block"><h4>PHASE 1 — SYSTEM UNDERSTANDING</h4>
+        <p style="color:var(--light);font-size:14px;margin-bottom:8px"><span class="bold">Goal:</span> Know WHERE Android stops you before trying to bypass anything.</p>
+        <div class="key-point"><div class="key-dot"></div><p>Connect unlocked test device → run <code style="color:var(--cyan)">adb shell</code> → explore /data, /system, /vendor</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Try accessing /data/data → "Permission denied" — note what fails and why</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Lock the phone → run <code style="color:var(--cyan)">adb devices</code> again → observe USB behavior changes</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Run <code style="color:var(--cyan)">dmesg</code> → see which kernel drivers loaded when USB connected</p></div>
+      </div>
+      <div class="explain-block"><h4>PHASE 2 — ATTACK SURFACE DISCOVERY</h4>
+        <p style="color:var(--light);font-size:14px;margin-bottom:8px"><span class="bold">Goal:</span> Know WHAT and WHERE to attack specifically.</p>
+        <div class="key-point"><div class="key-dot"></div><p>Run <code style="color:var(--cyan)">lsusb</code> → identify which protocols load on connection</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Research USB driver source in AOSP (Android Open Source Project) — actual C code is public</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Search ExploitDB for "Android USB kernel" → study past CVEs → learn what was vulnerable before</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Use Ghidra on driver binary → find unsafe memory operations</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Key question: which components are active when the phone is LOCKED?</p></div>
+      </div>
+      <div class="explain-block"><h4>PHASE 3 — POC DESIGN & DEMONSTRATION</h4>
+        <p style="color:var(--light);font-size:14px;margin-bottom:8px"><span class="bold">Goal:</span> Show a controlled demonstration with a documented exploit path.</p>
+        <div class="key-point"><div class="key-dot"></div><p>Configure Facedancer → emulate a USB device → send normal descriptors first (baseline)</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Gradually inject malformed inputs → watch dmesg for errors or crashes</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Use Frida to hook driver functions → confirm when crafted input reaches the vulnerable code</p></div>
+        <div class="key-point"><div class="key-dot"></div><p>Document crash signatures → explain what each crash indicates about exploit potential</p></div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"We follow a structured three-phase approach. Phase 1 maps the security boundaries — you can't bypass something you don't understand. Phase 2 finds the specific target — a particular vulnerable component. Phase 3 designs the demonstration — showing the vulnerability is real and triggerable. Each phase output feeds directly into the next."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10 -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDE 10</span>
+      <span class="slide-title">Android Defense-in-Depth — Why Root Isn't Enough</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="what-block"><h4>WHAT THIS SLIDE SHOWS</h4><p>6 specific mitigations: KASLR, Stack Canaries, SELinux, CFI, FBE+TEE, Verified Boot — each with a detailed explanation of exactly what it does and why it matters.</p></div>
+      <div class="warn-block"><h4>THE CRITICAL INSIGHT — SAY THIS TO JUDGES</h4><p>"Getting root (UID 0) is NOT the end of the chain. SELinux still enforces policy. FBE+TEE still encrypts user data. Verified Boot detects persistent changes. Modern Android requires chaining <span class="bold">at minimum 4 separate bypasses</span> to achieve unrestricted data access. This is defense-in-depth working as intended."</p></div>
+      <div class="explain-block"><h4>EACH DEFENSE EXPLAINED</h4>
+        <div class="key-point"><div class="key-dot" style="background:var(--cyan)"></div><p><span class="bold">KASLR (Kernel Address Space Layout Randomization):</span> Every boot, the kernel's code is loaded at a random memory address. Even if you have code execution, you don't know WHERE the kernel is in memory. You'd need to first "leak" a kernel address (from another bug) to calculate the base offset before you can redirect execution anywhere useful.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--purple)"></div><p><span class="bold">Stack Canaries:</span> A random value is placed on the stack between local variables and the return address. When a function returns, it checks if the canary changed. A buffer overflow that overwrites the return address also overwrites the canary — mismatch is detected, program crashes instead of executing attacker code.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--amber)"></div><p><span class="bold">SELinux (Mandatory Access Control):</span> Every process has a security context label (e.g. "untrusted_app"). Every file, socket, and resource also has a label. SELinux only allows interactions explicitly permitted in policy. Even UID 0 (root) cannot perform actions outside its SELinux context. This is why attackers need a separate "SELinux bypass" — escalation to UID 0 is step 1, SELinux bypass is step 2.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--green)"></div><p><span class="bold">CFI (Control Flow Integrity):</span> The compiler pre-computes all valid function call targets. At runtime, any indirect call (through a function pointer) is checked against this list. ROP chains that chain small code gadgets together are blocked because they jump to addresses not in the pre-approved list.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--pink)"></div><p><span class="bold">FBE + TEE:</span> File-Based Encryption uses keys derived from PIN + hardware secrets. The hardware secrets never leave the TEE — a physically separate processor. Even with root access, you cannot read user data without the correct PIN, because the decryption keys are inside a separate chip you can't directly access.</p></div>
+        <div class="key-point"><div class="key-dot" style="background:var(--orange)"></div><p><span class="bold">Verified Boot (AVB):</span> At every boot, each partition's hash is verified against a cryptographic signature. If a system file was modified (to persist an exploit), the hash mismatch is detected. The device won't boot normally — showing a warning or refusing to start. This prevents "persistent" compromise even after a successful exploit.</p></div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY</h4><p>"Each of these mitigations addresses a specific step in the attack chain. KASLR makes it hard to redirect execution. Stack canaries detect the overflow. SELinux restricts even root. CFI blocks ROP chains. FBE+TEE protects data even after root. Verified Boot prevents persistence. The attacker must bypass each one separately — that's why modern Android requires a chain of 4 or 5 separate vulnerabilities, not just one."</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11-14 condensed -->
+  <div class="slide-card">
+    <div class="slide-header" onclick="toggle(this)">
+      <span class="slide-num">SLIDES 11–14</span>
+      <span class="slide-title">Mitigations, Disclosure, Limitations, Conclusion</span>
+      <span class="slide-toggle">▼</span>
+    </div>
+    <div class="slide-body">
+      <div class="explain-block"><h4>SLIDE 11 — MITIGATION RECOMMENDATIONS</h4>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Kernel/USB Driver:</span> Validate ALL USB descriptor lengths before processing. Adopt Rust for new kernel modules — it eliminates memory safety bugs by design. Android 13+ already supports Rust kernel modules.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">USB Access Policy:</span> Default locked screen to charging-only USB mode. Require explicit unlock before MTP or ADB activates. Many OEMs already do this.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">OEM Diagnostics:</span> Disable EDL/Meta Mode without hardware auth token. Remove pre-authorized ADB keys from production builds.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">General:</span> SELinux enforcing on all production builds. Monthly kernel security patches minimum.</p></div>
+      </div>
+      <div class="explain-block"><h4>SLIDE 12 — RESPONSIBLE DISCLOSURE (6 PHASES)</h4>
+        <div class="flow">
+          <span class="flow-step">Discover</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Verify</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Document</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Notify</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Wait 90 days</span><span class="flow-arrow">→</span>
+          <span class="flow-step">Publish</span>
+        </div>
+        <p style="color:var(--light);font-size:14px;margin-top:8px">The 90-day window is the Google Project Zero standard. You notify the vendor privately, give them time to patch, then publish publicly. This benefits everyone — vendor gets time to fix, public gets information after it's safe.</p>
+      </div>
+      <div class="explain-block"><h4>SLIDE 13 — LIMITATIONS</h4>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">No universal exploit:</span> Every OEM has a different USB driver implementation. A technique for Samsung's driver won't work on Pixel's.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">Requires a specific vulnerability:</span> Without an unpatched CVE, the chain is theoretical. Finding a new bug requires deep kernel fuzzing research.</p></div>
+        <div class="key-point"><div class="key-dot"></div><p><span class="bold">SELinux as final barrier:</span> Even after UID 0, SELinux may block the specific actions needed for the demo.</p></div>
+      </div>
+      <div class="say-block"><h4>WHAT TO SAY FOR CONCLUSION</h4><p>"We demonstrated that Android's USB attack surface is theoretically exploitable under specific conditions — a memory safety bug in a kernel USB driver. We mapped the 6-layer security architecture, designed a 5-step attack chain, identified 6 specific mitigations that each step must defeat, and provided concrete recommendations per layer. The key insight is that modern Android's defense-in-depth means no single vulnerability gives full access — you must chain four or five separate weaknesses, which significantly raises the cost of real-world exploitation."</p></div>
+    </div>
+  </div>
+
+</div><!-- end slides section -->
+
+<!-- ══════════════════ TOOLS SECTION ══════════════════ -->
+<div class="section" id="sec-tools">
+  <div class="what-block" style="margin-bottom:1.5rem"><h4>HOW TO USE THIS SECTION</h4><p>Each tool card has: what it is, how it works, step-by-step usage, and exactly what to say in an interview.</p></div>
+  <div class="tools-grid" id="tools-container"></div>
+</div>
+
+<!-- ══════════════════ ATTACK CHAIN ══════════════════ -->
+<div class="section" id="sec-chain">
+  <div class="explain-block" style="margin-bottom:1.5rem"><h4>HOW TO EXPLAIN THE ATTACK CHAIN</h4><p>Always explain each step with both "what happens" and "why it matters". The right column in your slide is your explanation script. Practice saying this out loud — it should take about 3 minutes total.</p></div>
+  <div class="chain" id="chain-container"></div>
+  <div class="warn-block" style="margin-top:1.5rem"><h4>THE SINGLE MOST IMPORTANT THING TO SAY</h4><p>"Each arrow in this chain requires defeating a separate mitigation. Step 1 → Step 2 requires the USB parsing bug. Step 2 → Step 3 requires bypassing KASLR and stack canaries. Step 3 → Step 4 requires bypassing CFI. Step 4 → Step 5 requires bypassing SELinux. This is defense-in-depth working as it was designed — no single vulnerability gives you everything."</p></div>
+</div>
+
+<!-- ══════════════════ VULNERABILITIES ══════════════════ -->
+<div class="section" id="sec-vulns">
+  <div class="explain-block" style="margin-bottom:1.5rem"><h4>WHY THESE MATTER</h4><p>All four bugs exist because USB drivers are written in C. C has no automatic memory safety — every check must be done manually by the programmer. One missed check in millions of lines of code is a security vulnerability.</p></div>
+  <div class="vuln-grid">
+    <div class="vuln-card" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.3)">
+      <div class="vuln-title" style="color:#f87171">Buffer Overflow</div>
+      <div class="vuln-how" style="color:var(--light)"><strong>What it is:</strong> Writing more data into a buffer than it was allocated to hold. The extra data overwrites adjacent memory.<br><br><strong>In USB context:</strong> A driver allocates 64 bytes for a USB descriptor field. Attacker sends 200 bytes. The extra 136 bytes overflow into the next memory region — potentially a function pointer that controls execution.<br><br><strong>Why it leads to exploit:</strong> If the overflowed region contains a function pointer, the attacker controls where the CPU executes next.</div>
+      <div class="vuln-code" style="color:#f87171">char buf[64];<br>memcpy(buf, usb_data, usb_len); // BUG<br>// if usb_len=200 → 136 bytes overflow</div>
+      <div class="tags"><span class="tag" style="background:rgba(239,68,68,0.1);color:#f87171">Most Common</span><span class="tag" style="background:rgba(239,68,68,0.1);color:#f87171">USB Drivers</span></div>
+    </div>
+    <div class="vuln-card" style="background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.3)">
+      <div class="vuln-title" style="color:#a78bfa">Use-After-Free</div>
+      <div class="vuln-how" style="color:var(--light)"><strong>What it is:</strong> Using a memory pointer after the memory it points to has been freed.<br><br><strong>In USB context:</strong> A USB device disconnects → driver frees the device object → but a reference to it remains → another code path uses the reference → reads/writes freed memory.<br><br><strong>Why it leads to exploit:</strong> Attacker allocates their own data into the freed region before the stale pointer is used. Program reads attacker data — including fake function pointers.</div>
+      <div class="vuln-code" style="color:#a78bfa">free(dev_obj);  // freed<br>// attacker allocates here<br>dev_obj->callback();  // calls attacker!</div>
+      <div class="tags"><span class="tag" style="background:rgba(139,92,246,0.1);color:#a78bfa">Memory Safety</span><span class="tag" style="background:rgba(139,92,246,0.1);color:#a78bfa">Heap</span></div>
+    </div>
+    <div class="vuln-card" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3)">
+      <div class="vuln-title" style="color:#fbbf24">Race Condition</div>
+      <div class="vuln-how" style="color:var(--light)"><strong>What it is:</strong> Two execution paths access shared state concurrently without proper synchronization.<br><br><strong>In USB context:</strong> Permission check happens at T1 (passes). Between T1 and when the action executes (T2), attacker thread changes a shared variable. Check was valid at T1 but invalid at T2 — action proceeds with incorrect state.<br><br><strong>Why it leads to exploit:</strong> Security check is bypassed because the state it checked is no longer valid when the action runs.</div>
+      <div class="vuln-code" style="color:#fbbf24">// Thread 1:  check → action<br>// Thread 2:  change state between them<br>// T1: check passes<br>// T2: action runs with wrong state</div>
+      <div class="tags"><span class="tag" style="background:rgba(245,158,11,0.1);color:#fbbf24">Concurrency</span><span class="tag" style="background:rgba(245,158,11,0.1);color:#fbbf24">TOCTOU</span></div>
+    </div>
+    <div class="vuln-card" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3)">
+      <div class="vuln-title" style="color:#34d399">Integer Overflow</div>
+      <div class="vuln-how" style="color:var(--light)"><strong>What it is:</strong> Arithmetic on integer types produces a result that exceeds the type's maximum — wrapping to a small number.<br><br><strong>In USB context:</strong> Driver calculates buffer size as count × element_size. With large user-controlled count, multiplication wraps to 0. A 0-byte buffer is allocated. Data sized by the original large count is written in — massive overflow.<br><br><strong>Why it leads to exploit:</strong> Leads directly to a buffer overflow as the second step.</div>
+      <div class="vuln-code" style="color:#34d399">// count=65536, elem_size=65536<br>int total = count * elem_size;<br>// wraps: 65536*65536 → 0 (overflow!)<br>// allocate 0 bytes, write 4GB in</div>
+      <div class="tags"><span class="tag" style="background:rgba(16,185,129,0.1);color:#34d399">Arithmetic</span><span class="tag" style="background:rgba(16,185,129,0.1);color:#34d399">Integer Math</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DEFENSES ══════════════════ -->
+<div class="section" id="sec-defense">
+  <div class="warn-block" style="margin-bottom:1.5rem"><h4>KEY MESSAGE</h4><p>Android uses 6 independent mitigations. Each one targets a different step in the attack chain. This means an attacker must bypass ALL of them in sequence — making the full exploit chain very difficult in practice.</p></div>
+  <div id="defense-container"></div>
+</div>
+
+<!-- ══════════════════ INTERVIEW Q&A ══════════════════ -->
+<div class="section" id="sec-interview">
+  <div class="what-block" style="margin-bottom:1.5rem"><h4>PREPARE THESE ANSWERS</h4><p>These are the most common questions judges and interviewers ask about this kind of security research project. Practice saying each answer out loud.</p></div>
+
+  <div class="tip-card">
+    <div class="tip-q">What is the main research contribution of your project?</div>
+    <div class="tip-a">Our contribution is a structured analysis of Android's USB attack surface framed as a complete exploit chain. We mapped all 6 security layers, identified USB as the highest-value entry point because kernel parsing occurs before the security model applies, designed a theoretical 5-step exploit chain, mapped each step to the specific mitigation that defeats it, and produced concrete engineering recommendations per layer. We also identified a gap in existing tooling — current tools work in isolation — and proposed a unified orchestration framework as future work.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">Why USB specifically? Why not Bluetooth or WiFi?</div>
+    <div class="tip-a">USB is uniquely powerful because <strong>kernel-level descriptor parsing happens before any user interaction or permission check</strong>. When a USB device connects, the kernel must identify it — this is mandatory in the USB protocol and happens automatically regardless of lockscreen state. Bluetooth requires a pairing sequence with user approval. WiFi requires network association. USB has no such gatekeeping at the kernel level, which is what makes it the highest-value theoretical attack surface for this research.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">Does getting root (UID 0) give you access to all user data?</div>
+    <div class="tip-a">No — and this is a critical distinction. <strong>Root (UID 0) and unrestricted data access are two different things on modern Android.</strong> Even as root, SELinux enforces mandatory access control based on process labels, not just UID. Additionally, user data is encrypted with File-Based Encryption (FBE) using keys derived from the user's PIN combined with hardware secrets in the TEE. Those keys never leave the TEE even under root access. So root gives you kernel control — it does NOT automatically give you readable user files. A full attack chain would need: UID escalation → SELinux bypass → device unlock to obtain FBE keys.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">What is SELinux and why does it matter even after root?</div>
+    <div class="tip-a">SELinux is Mandatory Access Control — it's a system where every process and every resource has a security context label. The kernel enforces a policy that only allows specific label-to-label interactions. Critically, <strong>these rules apply regardless of UID</strong>. Even a process running as root (UID 0) cannot perform actions that its SELinux label isn't permitted. For example, a process with context "init" cannot access files labeled for "system_server". This is why modern exploits need a separate SELinux bypass step — simply achieving UID 0 isn't enough.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">What is the difference between static and dynamic analysis?</div>
+    <div class="tip-a"><strong>Static analysis</strong> (Ghidra) — you analyze the binary code without running it. You decompile the driver to pseudo-C and manually review for dangerous patterns: unchecked memcpy, user-controlled sizes, missing length validation. You find WHERE the bug might be. <strong>Dynamic analysis</strong> (Frida) — you hook into the running program and observe what actually happens when specific inputs arrive. You confirm that your crafted input actually reaches the vulnerable function at runtime. Static analysis finds the bug in theory; dynamic analysis confirms it's reachable in practice.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">What is Facedancer and how does it differ from BadUSB?</div>
+    <div class="tip-a"><strong>Facedancer</strong> is a Python library for scripting arbitrary USB device behavior. You define exactly how your device responds to every USB request — its descriptors, data, protocol behavior. It uses GreatFET hardware to translate Python instructions into actual USB signals. It's a fully programmable research platform. <strong>BadUSB</strong> is a specific attack concept where a device pretends to be a keyboard and injects keystrokes — it's one specific use case. Facedancer is the framework that can implement BadUSB behavior and much more — MTP fuzzing, state machine attacks, protocol manipulation. Think of Facedancer as the platform and BadUSB as one of many possible scripts you could run on it.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">What would your unified tool do that existing tools don't?</div>
+    <div class="tip-a">Current tools require manual handoff between stages — you run Wireshark, manually analyze output, configure Facedancer separately, manually inspect dmesg, write Frida scripts independently. A unified framework would <strong>automate the pipeline</strong>: automatically parse device profiles from USB capture, feed them to Facedancer, instrument Frida hooks based on Ghidra's static analysis output, monitor for crashes, and generate a structured finding report — all from a single command. The innovation is orchestration and automation, not new exploitation techniques. This reduces the expertise threshold for USB security research and enables systematic analysis across many devices.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-q">Why is this research ethical? Isn't this just teaching people to hack?</div>
+    <div class="tip-a">Security research follows the principle that <strong>defenders need to understand attacks to build effective defenses</strong>. All research was conducted on our own test devices — no unauthorized access. The attack chain we describe is theoretical and requires a specific unpatched vulnerability to execute. Our deliverables explicitly include mitigation recommendations and a responsible disclosure framework. The same knowledge that explains how an attack works is what enables engineers to fix the underlying flaw. Published security research — including detailed CVE write-ups from Google Project Zero — follows this exact model and has directly improved Android's security over time.</div>
+  </div>
+
+</div><!-- end interview section -->
+
+</div><!-- end main -->
+
+<script>
+const toolsData = [
+  { name:"Syzkaller", org:"Google", cat:"fuzz", badge:"Fuzzing", bc:"tb-fuzz",
+    what:"Coverage-guided Linux kernel fuzzer with built-in USB support. Runs entirely inside a VM using Raw Gadget driver and Dummy HCD (a fake USB host controller). No real hardware needed.",
+    how:"Generates thousands of random/mutated USB packets, sends them to the kernel driver, and uses code coverage feedback to guide which inputs to try next — prioritizing inputs that reach unexplored code branches.",
+    steps:["Set up QEMU VM with Raw Gadget driver enabled in kernel config","Configure Syzkaller JSON with USB syscall descriptions","Syzkaller generates random USB descriptor and transfer sequences","Kernel processes each input — crashes are caught and logged with full call stack","Triage: is this crash exploitable? What code path triggered it?"],
+    interview:"Syzkaller is Google's own internal kernel fuzzer — the same tool they use to find Android bugs before shipping. Knowing this tool exists and how it works shows you understand state-of-the-art security research methodology."
+  },
+  { name:"USBFuzz", org:"HexHive / EPFL", cat:"fuzz", badge:"Fuzzing", bc:"tb-fuzz",
+    what:"Academic open-source USB driver fuzzer that works across Linux, FreeBSD, macOS, and Windows. Uses a virtualized USB peripheral — the OS thinks a real device is connected.",
+    how:"Emulates a USB device at the virtual hardware level. The fuzzer mutates USB traffic (descriptors, transfers, response data) and monitors the target kernel for crashes. Coverage feedback guides mutation strategy.",
+    steps:["Instrument target kernel with coverage tracking (e.g. kcov)","Build USBFuzz with the target OS","Attach virtual USB peripheral emulator to the target VM","Feed mutated USB inputs — coverage guides which mutations to try next","Collect crashes, analyze for security impact, report findings"],
+    interview:"USBFuzz was published at USENIX Security 2020. Citing it shows you're aware of academic security research, not just hacker tools."
+  },
+  { name:"FuzzUSB", org:"purseclab", cat:"fuzz", badge:"Fuzzing", bc:"tb-fuzz",
+    what:"Focuses on fuzzing USB gadget (device-side) drivers rather than host-side drivers. Built on Syzkaller with added USB gadget-specific syscall descriptions.",
+    how:"Uses Linux ConfigFS to dynamically create virtual USB gadget configurations, then fuzzes the kernel code that handles gadget operations. Targets a different side of the USB stack than most tools.",
+    steps:["Apply FuzzUSB patches to a Linux kernel build","Configure virtual USB gadget via ConfigFS interface","Run Syzkaller with FuzzUSB's gadget-specific syscall descriptions","Fuzz gadget driver functions: bind, unbind, setup, data transfer","Collect kernel panics and memory corruption reports"],
+    interview:"FuzzUSB targets the device-side (gadget) stack — Android also has gadget drivers for when it appears as a USB device to a PC. Different attack surface from host-side."
+  },
+  { name:"AutoGadgetFS", org:"Community / Python", cat:"fuzz", badge:"Fuzzing", bc:"tb-fuzz",
+    what:"Beginner-friendly Python USB testing framework. Clones real USB devices using Linux ConfigFS, then replays and mutates their traffic. Designed to need no deep USB protocol knowledge.",
+    how:"You connect a real USB device and AutoGadgetFS captures its complete USB profile (descriptors, traffic patterns). It then creates a software clone using ConfigFS and systematically mutates packet fields to generate test cases.",
+    steps:["Plug real USB device into Linux machine — AutoGadgetFS captures profile","Clone the device using ConfigFS","Connect clone to target device","Automatically mutate packet fields: lengths, types, data payloads","Monitor target for crashes, hangs, or unexpected behavior"],
+    interview:"AutoGadgetFS is good to mention as a more accessible entry point — shows you know the tool ecosystem at different complexity levels."
+  },
+  { name:"Facedancer 3.0", org:"Great Scott Gadgets", cat:"emulation", badge:"Emulation", bc:"tb-emul",
+    what:"Python library for scripting arbitrary USB device behavior using GreatFET or Cynthion hardware. You write Python code that describes how a USB device behaves — the library translates it to real USB signals via hardware.",
+    how:"You write a Python class with methods for handling USB requests: get_descriptor(), handle_data(), etc. Facedancer sends actual USB signals through the GreatFET hardware to the target. The target's driver processes your device as if it were real hardware.",
+    steps:["Install Facedancer Python library on your laptop","Connect GreatFET One hardware: laptop USB → GreatFET → target Android","Write Python class defining your device (descriptors, response handlers)","Run script — Facedancer translates Python → real USB electrical signals","Observe target Android's kernel reaction via dmesg"],
+    interview:"Facedancer is the primary tool for delivering crafted USB inputs. When asked 'how do you get malformed data into the target?', the answer is Facedancer."
+  },
+  { name:"HydraDancer", org:"Quarkslab", cat:"emulation", badge:"Emulation", bc:"tb-emul",
+    what:"High-Speed USB2 backend for Facedancer built on the WCH569 chip. Older Facedancer boards only support Full-Speed (12 Mbps). HydraDancer adds High-Speed (480 Mbps) support.",
+    how:"Acts as a faster hardware backend for existing Facedancer scripts. No API changes — same Python code runs, but the underlying hardware operates at USB2 High-Speed. Needed for testing modern devices that require high-speed timing.",
+    steps:["Flash HydraDancer firmware onto WCH569 / HydraUSB3 board","Install Facedancer Python library with HydraDancer backend","Write normal Facedancer scripts — no changes to your Python code","Connect HydraDancer to target — now communicates at 480 Mbps","Enables testing of drivers that only activate at High-Speed mode"],
+    interview:"Quarkslab is a respected French security research firm. Knowing they built this shows awareness of who contributes to the security research ecosystem."
+  },
+  { name:"GreatFET One", org:"Great Scott Gadgets", cat:"hw", badge:"Hardware", bc:"tb-hw",
+    what:"Open-source hardware platform — the physical device that runs Facedancer. Two USB ports (~100 I/O pins). One port connects to your laptop (control), other connects to target. Your Python code controls what USB signals the target sees.",
+    how:"Your laptop runs Facedancer Python scripts. The scripts send commands to GreatFET over the control USB port. GreatFET translates those commands into real USB electrical signals on the target port. The target's kernel driver processes the signals as if from a real USB device.",
+    steps:["Connect laptop → GreatFET (control port)","Connect GreatFET → Android target (attack port)","Run Facedancer Python script on laptop","GreatFET translates Python commands → real USB signals in real-time","Target driver processes signals — observe reactions via dmesg"],
+    interview:"GreatFET is the hardware backbone of USB emulation research. When asked about the physical setup, describe this two-port architecture."
+  },
+  { name:"USB Armory", org:"Inverse Path / F-Secure", cat:"hw", badge:"Hardware", bc:"tb-hw",
+    what:"Flash-drive sized open-source computer running Linux on ARM. More powerful than GreatFET because it runs a full OS — all attack logic runs on-device, no laptop needed.",
+    how:"You flash a custom Linux image, configure USB gadget mode, and write attack scripts that run autonomously when plugged in. It can emulate HID + storage + Ethernet simultaneously (composite device).",
+    steps:["Flash custom Linux image onto USB Armory storage","Write Python/bash attack scripts for on-device execution","Configure USB gadget mode: HID, mass-storage, networking, or composite","Plug directly into target — Armory runs autonomously","All logic executes on the Armory's ARM processor — no laptop needed"],
+    interview:"USB Armory is the most powerful emulation platform because it runs full Linux. Good for sophisticated multi-stage attacks that need complex logic."
+  },
+  { name:"Ghidra", org:"NSA (open source)", cat:"analysis", badge:"Analysis", bc:"tb-anal",
+    what:"Open-source reverse engineering framework. Decompiles binary files to pseudo-C code across many CPU architectures. Used to read and analyze Android kernel driver binaries without having the source code.",
+    how:"Import the driver binary → Ghidra auto-analyzes it → you get a decompiled pseudo-C view of every function → manually review USB handler functions for dangerous patterns: unchecked memcpy, user-controlled sizes, missing length validation.",
+    steps:["Download kernel driver binary from Android firmware or AOSP source","Import into Ghidra — File → Import → auto-analysis runs automatically","Navigate to USB-related functions (usb_probe, urb_complete, mtp_receive)","Search for memcpy/memset calls — click each one, check if length is validated","Flag: is the length user-controlled? Is there a bounds check? If no → potential bug"],
+    interview:"When interviewer asks 'how did you find the vulnerability?', the answer starts with Ghidra. It's the static analysis tool that lets you read the driver code to find the bug before triggering it."
+  },
+  { name:"Frida", org:"Community / NowSecure", cat:"analysis", badge:"Analysis", bc:"tb-anal",
+    what:"Dynamic instrumentation toolkit. Injects a JavaScript runtime into a running Android process to hook function calls, log arguments, and modify behavior at runtime — without modifying the binary.",
+    how:"You write a JavaScript file that hooks a target function. When Frida attaches to the process and your hook file runs, every call to that function logs its arguments. Used to confirm that crafted input actually reaches the vulnerable function.",
+    steps:["Write JavaScript hook file: Interceptor.attach(funcAddr, { onEnter: function(args) { console.log(args[0]); } })","Connect Android test device via ADB","Run: frida -U -n com.android.mtp -s hook.js","Connect USB device — Frida logs every call to the hooked function with arguments","Verify: does your crafted descriptor actually reach the dangerous memcpy?"],
+    interview:"Frida bridges the gap between static analysis and real exploitation. Ghidra shows WHERE the bug might be; Frida confirms it's actually reachable with your specific input."
+  },
+  { name:"QEMU (USB redir)", org:"Open source", cat:"cap", badge:"VM", bc:"tb-cap",
+    what:"Full system emulator. Run Android or Linux inside a VM with USB device redirection. Syzkaller's documentation specifically recommends QEMU for USB fuzzing — all crashes happen safely inside the VM.",
+    how:"Run Android/Linux as a QEMU guest. Attach Facedancer or a fuzzer via QEMU's USB-Redir protocol. The guest OS processes USB traffic as if from a real device. Kernel panics crash the VM, not a real device — perfectly safe for research.",
+    steps:["Set up QEMU VM with Android or Linux kernel image","Enable USB device redirection in QEMU config (usbredir)","Attach Facedancer or Syzkaller fuzzer via USB-Redir","Guest OS kernel processes USB — behaves identically to real hardware","Crashes are VM crashes — safe, repeatable, easily logged"],
+    interview:"QEMU is the safe testing environment. Always test in a VM before any real device. Crashes in a VM are harmless and repeatable."
+  },
+  { name:"Wireshark (USB)", org:"Wireshark Foundation", cat:"cap", badge:"Capture", bc:"tb-cap",
+    what:"Packet capture tool that can decode USB traffic using usbmon (Linux) or USBPcap (Windows). Captures every USB packet exchanged on a bus — useful for understanding normal protocol before designing attacks.",
+    how:"Load usbmon kernel module → Wireshark captures all USB traffic → you see complete descriptor exchanges, data transfers, and responses with full decode. Used to understand what normal USB traffic looks like so you can design meaningful deviations.",
+    steps:["sudo modprobe usbmon (load USB monitoring kernel module)","Open Wireshark → select the usbmon interface for your target USB bus","Plug in a real USB device — all packets captured and decoded","Inspect: device descriptor, configuration descriptor, endpoint descriptors","Use captures to understand the protocol → design targeted malformed inputs"],
+    interview:"Wireshark for USB is your observation tool. You need to understand what normal looks like before you can meaningfully deviate from it."
+  }
+];
+
+const defenseData = [
+  { name:"KASLR", full:"Kernel Address Space Layout Randomization", color:"var(--cyan)",
+    what:"Every boot, the entire kernel is loaded at a random base memory address. Code and data are at unpredictable locations.",
+    why:"Even if an attacker has kernel code execution (via a bug), they don't know WHERE to redirect the CPU. They need to first 'leak' a kernel address through a separate information-disclosure bug to calculate the base offset.",
+    bypass:"Requires a separate kernel address leak bug — usually a second vulnerability specifically for reading kernel memory." },
+  { name:"Stack Canaries", full:"Stack Smashing Protection (SSP)", color:"var(--purple)",
+    what:"A random 'canary' value is placed between local variables and the return address on the call stack. Before a function returns, the canary is checked.",
+    why:"A buffer overflow that overwrites the return address must also overwrite the canary. The mismatch is detected, the program crashes (controlled crash) instead of executing attacker code. The attacker must know the canary value to bypass it.",
+    bypass:"Requires leaking the canary value first. Or using a UAF bug that targets heap memory instead of the stack (canaries don't protect heap)." },
+  { name:"SELinux", full:"Security-Enhanced Linux (Mandatory Access Control)", color:"var(--amber)",
+    what:"Every process and every resource has a security context label. Policy rules define which label interactions are allowed. Enforced regardless of UID.",
+    why:"Even UID 0 (root) cannot perform actions outside its SELinux label's permissions. A process labeled 'init' cannot read files labeled 'system_server'. This makes privilege escalation insufficient on its own.",
+    bypass:"Requires finding a SELinux policy misconfiguration, a kernel SELinux bug, or exploiting a service that has broader SELinux permissions." },
+  { name:"CFI", full:"Control Flow Integrity", color:"var(--green)",
+    what:"At compile time, all valid indirect call targets are pre-computed. At runtime, any indirect function call is validated against this list before execution.",
+    why:"ROP (Return-Oriented Programming) chains redirect execution by jumping to arbitrary locations in existing code. CFI blocks this by ensuring only pre-approved jump targets are reachable.",
+    bypass:"Requires finding a valid call target in the approved list that can be abused, or bypassing CFI via a data-only attack (modifying data structures without redirecting code flow)." },
+  { name:"FBE + TEE", full:"File-Based Encryption + Trusted Execution Environment", color:"var(--pink)",
+    what:"User data is encrypted per-file. Encryption keys are derived from the user's PIN combined with hardware secrets stored in the TEE — a physically separate processor chip.",
+    why:"Even with root access, you cannot read user files because the decryption keys are inside the TEE. The TEE only provides keys after the user enters the correct PIN. Root access to the main processor doesn't give you TEE access.",
+    bypass:"Requires either: the user unlocking the device (keys become available), or a TEE vulnerability (extremely rare, hardware-level bug)." },
+  { name:"Verified Boot", full:"Android Verified Boot (AVB)", color:"var(--orange)",
+    what:"At every boot, the cryptographic hash of each partition is verified against a signature. If any system file was modified, the hash mismatch is detected.",
+    why:"An attacker who successfully exploits a kernel bug might try to persist their access by modifying system files. Verified Boot detects this modification and refuses to boot normally — preventing persistent compromise.",
+    bypass:"Cannot bypass cryptographically without the signing key. Successful exploits are therefore non-persistent — they die when the device reboots. This is intentional." }
+];
+
+function renderTools(){
+  const c = document.getElementById('tools-container');
+  c.innerHTML = toolsData.map(t=>`
+    <div class="tool-card">
+      <div class="tool-top">
+        <span class="tool-name">${t.name}</span>
+        <span class="tool-badge ${t.bc}">${t.badge}</span>
+      </div>
+      <div class="tool-org">${t.org}</div>
+      <div class="tool-what">${t.what}</div>
+      <div class="what-block" style="margin-bottom:0.75rem"><h4>HOW IT WORKS</h4><p>${t.how}</p></div>
+      <div class="tool-how-title">STEP BY STEP</div>
+      ${t.steps.map((s,i)=>`<div class="tool-step"><span class="tool-step-n">${i+1}</span><span>${s}</span></div>`).join('')}
+      <div class="tool-interview"><strong>WHAT TO SAY IN INTERVIEW</strong>${t.interview}</div>
+    </div>
+  `).join('');
+}
+
+function renderChain(){
+  const c = document.getElementById('chain-container');
+  const chainSteps = [
+    {n:"01",title:"USB Connection",color:"var(--cyan)",what:"A malicious USB device is physically connected to the locked Android phone.",why:"USB descriptor parsing happens at kernel level BEFORE the lockscreen, BEFORE permissions, BEFORE any user interaction. The kernel must identify the device — this is mandatory in the USB protocol. The phone has no mechanism to skip this step.",mitigation:"USB access restriction policies (limit to charge-only when locked)"},
+    {n:"02",title:"Crafted Input Injection",color:"#06B6D4",what:"The attacker device sends malformed USB descriptors or MTP packets with invalid/oversized length fields.",why:"The kernel USB driver processes this in C code with no automatic bounds checking. A length field that exceeds the buffer size creates a memory corruption opportunity the moment the driver copies the data.",mitigation:"Input validation in driver code. Rust kernel modules (memory-safe by design)."},
+    {n:"03",title:"Vulnerability Triggered",color:"var(--purple)",what:"The malformed input hits an unchecked buffer copy or state machine flaw inside the driver code.",why:"Memory adjacent to the allocated buffer is overwritten. If this region contains a function pointer (which it might in complex driver objects), the attacker now controls where the CPU will jump on the next indirect call.",mitigation:"KASLR (unknown addresses), Stack Canaries (detected overflow), CFI (blocked pointer redirect)"},
+    {n:"04",title:"Kernel Code Execution",color:"var(--amber)",what:"The overwritten function pointer is called. CPU jumps to attacker-controlled memory. Attacker code runs in kernel context.",why:"Kernel context = maximum privilege. The attacker can now read and write any kernel data structure, including the credential structures that define process identity (UID).",mitigation:"KASLR must already be bypassed to reach here. CFI blocks indirect jumps to non-approved targets."},
+    {n:"05",title:"Privilege Escalation",color:"var(--red)",what:"The kernel credential structure (task_struct → cred → uid, gid) is modified to UID = 0 (root).",why:"The process is now root. HOWEVER — SELinux policy still applies based on the process's security context label, not UID. And FBE keys are still inside the TEE. This is NOT the final step for data access.",mitigation:"SELinux (enforces policy regardless of UID). FBE+TEE (data encrypted, keys in separate processor)."}
+  ];
+  c.innerHTML = chainSteps.map((st,i)=>`
+    <div class="chain-step">
+      <div class="chain-left">
+        <div class="chain-circle" style="background:rgba(0,0,0,0.3);color:${st.color};border:2px solid ${st.color}">${st.n}</div>
+        ${i<4?`<div class="chain-line" style="background:${st.color};opacity:0.3"></div>`:''}
+      </div>
+      <div class="chain-content" style="border-color:${st.color}33">
+        <div class="chain-title" style="color:${st.color}">${st.title}</div>
+        <div class="chain-what" style="color:var(--light);font-size:14px;margin-bottom:8px">${st.what}</div>
+        <div class="chain-why" style="border-left:2px solid ${st.color};color:${st.color}"><strong>Why it matters:</strong> ${st.why}</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--gray)"><span style="color:var(--green);font-weight:500">Mitigations here:</span> ${st.mitigation}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDefense(){
+  const c = document.getElementById('defense-container');
+  c.innerHTML = defenseData.map(d=>`
+    <div class="slide-card" style="margin-bottom:1rem">
+      <div style="padding:1.25rem;border-bottom:3px solid ${d.color}33;display:flex;align-items:center;gap:1rem">
+        <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${d.color}">${d.name}</span>
+        <span style="font-size:12px;color:var(--gray);font-style:italic">${d.full}</span>
+      </div>
+      <div style="padding:1.25rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+        <div class="what-block" style="margin:0;border-color:${d.color}"><h4 style="color:${d.color}">WHAT IT DOES</h4><p>${d.what}</p></div>
+        <div class="explain-block" style="margin:0;border-color:${d.color}66"><h4 style="color:${d.color}99">WHY IT MATTERS</h4><p>${d.why}</p></div>
+        <div class="warn-block" style="margin:0;border-color:var(--red)55"><h4>HOW TO BYPASS (THEORY)</h4><p>${d.bypass}</p></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showSection(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggle(header){
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('.slide-toggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+renderTools();
+renderChain();
+renderDefense();
+</script>
+</body>
+</html>

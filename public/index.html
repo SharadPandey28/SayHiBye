@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SayHiBye</title>
+  <meta name="description"
+    content="End-to-end encrypted chat with Diffie-Hellman key exchange and Perfect Forward Secrecy. Server sees only ciphertext." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+   DESIGN SYSTEM
+═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg: #030712;
+      --s1: #080e1c;
+      --s2: #0d1425;
+      --s3: #141f34;
+      --bdr: #1a2540;
+      --bdr2: #243050;
+
+      --g: #10d9a0;
+      --g2: #0bbc8a;
+      --b: #3b9eff;
+      --b2: #2882e0;
+      --p: #8b5cf6;
+      --y: #f59e0b;
+      --r: #ef4444;
+
+      --txt: #e8eeff;
+      --txt2: #8b9bbf;
+      --dim: #475a7a;
+
+      --rad: 10px;
+      --rad-lg: 16px;
+      --rad-xl: 22px;
+
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --glow-g: 0 0 24px rgba(16, 217, 160, 0.18);
+      --glow-b: 0 0 24px rgba(59, 158, 255, 0.18);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 2px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      height: 54px;
+      padding: 0 22px;
+      background: var(--s1);
+      border-bottom: 1px solid var(--bdr);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--g) 30%, var(--b) 70%, transparent 100%);
+      opacity: 0.35;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, var(--g), var(--b));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(16, 217, 160, 0.3);
+    }
+
+    .logo-wordmark {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      color: var(--txt);
+      line-height: 1;
+    }
+
+    .logo-wordmark span {
+      color: var(--g);
+    }
+
+    .logo-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.47rem;
+      color: var(--dim);
+      letter-spacing: 2px;
+      margin-top: 3px;
+    }
+
+    .hdr-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Mobile panel toggle */
+    #dh-toggle-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      font-weight: 600;
+      background: var(--s2);
+      border: 1px solid var(--bdr);
+      color: var(--txt2);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    /* fix #11: visual state feedback */
+    #dh-toggle-btn.panel-open {
+      border-color: var(--b);
+      color: var(--b);
+      background: rgba(59, 158, 255, 0.08);
+    }
+
+    #dh-panel-badge {
+      display: none;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      min-width: 16px;
+      height: 16px;
+      background: var(--y);
+      border-radius: 8px;
+      font-size: 0.5rem;
+      font-weight: 700;
+      color: #000;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+    }
+
+    #dh-panel-badge.show {
+      display: flex;
+    }
+
+    /* Status badges */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--s2);
+      border: 1px solid var(--bdr);
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.57rem;
+      color: var(--dim);
+      transition: 0.3s;
+    }
+
+    .status-pill.on {
+      color: var(--g);
+      border-color: rgba(16, 217, 160, 0.35);
+      background: rgba(16, 217, 160, 0.06);
+    }
+
+    .status-pill.key {
+      color: var(--b);
+      border-color: rgba(59, 158, 255, 0.35);
+      background: rgba(59, 158, 255, 0.06);
+    }
+
+    .sdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dim);
+      flex-shrink: 0;
+      transition: 0.3s;
+    }
+
+    .status-pill.on .sdot {
+      background: var(--g);
+      box-shadow: 0 0 6px var(--g);
+    }
+
+    .status-pill.key .sdot {
+      background: var(--b);
+      box-shadow: 0 0 6px var(--b);
+    }
+
+    /* ── TOAST SYSTEM ── */
+    #toasts {
+      position: fixed;
+      top: 62px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      max-width: 300px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--s2);
+      border: 1px solid var(--bdr2);
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--txt2);
+      box-shadow: var(--shadow);
+      animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+      pointer-events: auto;
+    }
+
+    .toast.exit {
+      animation: toastOut 0.25s ease forwards;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(16px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes toastOut {
+      to {
+        opacity: 0;
+        transform: translateX(16px)
+      }
+    }
+
+    .toast.ok {
+      border-color: rgba(16, 217, 160, 0.3);
+      color: #6ee7b7;
+    }
+
+    .toast.err {
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .toast.info {
+      border-color: rgba(59, 158, 255, 0.3);
+      color: #93c5fd;
+    }
+
+    .toast.warn {
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+    }
+
+    .toast-ico {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* ── ONBOARDING SCREENS ── */
+    #screens {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* dot-grid background */
+    #screens::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--bdr) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ambient glow orbs */
+    #screens::after {
+      content: '';
+      position: fixed;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(16, 217, 160, 0.05) 0%, transparent 70%);
+      top: -200px;
+      left: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(22px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .card {
+      background: var(--s1);
+      border: 1px solid var(--bdr);
+      border-radius: var(--rad-xl);
+      padding: 38px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--g), var(--b));
+      opacity: 0.6;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+
+    .card-title em {
+      color: var(--g);
+      font-style: normal;
+    }
+
+    .card-title span {
+      color: var(--b);
+      margin-top: 10px;
+    }
+
+    .card-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--txt2);
+      line-height: 1.8;
+      margin-top: 8px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: rgba(16, 217, 160, 0.07);
+      border: 1px solid rgba(16, 217, 160, 0.25);
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--g);
+      letter-spacing: 1px;
+      width: fit-content;
+    }
+
+    /* ── INPUTS ── */
+    .fl {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.57rem;
+      color: var(--dim);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100%;
+      background: var(--s2);
+      border: 1.5px solid var(--bdr);
+      color: var(--txt);
+      padding: 12px 15px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      border-radius: var(--rad);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--g);
+      box-shadow: 0 0 0 3px rgba(16, 217, 160, 0.1);
+    }
+
+    input::placeholder {
+      color: var(--dim);
+    }
+
+    input.err-input {
+      border-color: var(--r) !important;
+    }
+
+    /* ── TILES ── */
+    .tile-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .tile {
+      border: 2px solid var(--bdr);
+      border-radius: var(--rad-lg);
+      padding: 20px 16px;
+      cursor: pointer;
+      background: var(--s2);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tile:hover {
+      border-color: var(--bdr2);
+      transform: translateY(-2px);
+      background: var(--s3);
+    }
+
+    .tile.sel {
+      border-color: var(--g);
+      background: rgba(16, 217, 160, 0.06);
+      box-shadow: var(--glow-g);
+    }
+
+    .tile.sel.blue {
+      border-color: var(--b);
+      background: rgba(59, 158, 255, 0.06);
+      box-shadow: var(--glow-b);
+    }
+
+    .tile-icon {
+      font-size: 1.7rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .tile-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+      color: var(--txt);
+    }
+
+    .tile.sel .tile-name {
+      color: var(--g);
+    }
+
+    .tile.sel.blue .tile-name {
+      color: var(--b);
+    }
+
+    .tile-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.59rem;
+      color: var(--txt2);
+      line-height: 1.65;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 13px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      border: none;
+      border-radius: var(--rad);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-g {
+      background: linear-gradient(135deg, var(--g), var(--g2));
+      color: #000;
+      box-shadow: 0 4px 16px rgba(16, 217, 160, 0.25);
+    }
+
+    .btn-g:not(:disabled):hover {
+      box-shadow: 0 6px 24px rgba(16, 217, 160, 0.38);
+    }
+
+    .btn-b {
+      background: linear-gradient(135deg, var(--b), var(--b2));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(59, 158, 255, 0.25);
+    }
+
+    .btn-r {
+      background: var(--r);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--bdr);
+      color: var(--txt2);
+      flex: 0;
+      padding: 13px 18px;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--bdr2);
+      color: var(--txt);
+    }
+
+    /* ── NOTICES ── */
+    .notice {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 10px 13px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.6;
+    }
+
+    .notice.show {
+      display: block;
+    }
+
+    .notice.err {
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .notice.info {
+      color: #93c5fd;
+      background: rgba(59, 158, 255, 0.08);
+      border: 1px solid rgba(59, 158, 255, 0.25);
+    }
+
+    .notice.ok {
+      color: #6ee7b7;
+      background: rgba(16, 217, 160, 0.08);
+      border: 1px solid rgba(16, 217, 160, 0.25);
+    }
+
+    /* ── PENDING SCREEN ── */
+    #timeout-bar-wrap {
+      width: 100%;
+      height: 3px;
+      background: var(--bdr);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #timeout-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--y), #fb923c);
+      border-radius: 2px;
+      transition: width 1s linear;
+    }
+
+    /* ── MAIN CHAT ── */
+    #main {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+      flex-direction: row;
+    }
+
+    /* ── DH PANEL ── */
+    #dh-panel {
+      width: 276px;
+      border-right: 1px solid var(--bdr);
+      display: flex;
+      flex-direction: column;
+      background: var(--s1);
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .p-sec {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--bdr);
+    }
+
+    .p-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.5rem;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .host-badge {
+      font-size: 0.5rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--y);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .algo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(59, 158, 255, 0.07);
+      border: 1px solid rgba(59, 158, 255, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.53rem;
+      color: var(--b);
+    }
+
+    canvas#dhc {
+      display: block;
+      margin: 10px auto;
+      border-radius: 8px;
+      background: var(--bg);
+    }
+
+    /* Members */
+    .m-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.5rem;
+      color: var(--dim);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--s2);
+      border: 1px solid var(--bdr);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      animation: pop 0.2s ease;
+      transition: 0.2s;
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0;
+        transform: scale(0.8)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    .chip-av {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--s3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.48rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .chip.me .chip-av {
+      background: rgba(16, 217, 160, 0.2);
+      color: var(--g);
+    }
+
+    .chip.live .chip-av {
+      background: rgba(59, 158, 255, 0.15);
+      color: var(--b);
+    }
+
+    .chip.offline .chip-av {
+      background: var(--s3);
+      color: var(--dim);
+    }
+
+    .chip-label {
+      color: var(--txt2);
+    }
+
+    .chip.me .chip-label {
+      color: var(--g);
+    }
+
+    .chip.live .chip-label {
+      color: var(--txt);
+    }
+
+    .chip.offline .chip-label {
+      color: var(--dim);
+      text-decoration: line-through;
+    }
+
+    /* DH Steps */
+    .step {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--bdr);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      line-height: 1.5;
+      opacity: 0.28;
+      transition: all 0.35s;
+      margin-bottom: 5px;
+    }
+
+    .step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step.on {
+      opacity: 1;
+      border-color: var(--g);
+    }
+
+    .step.don {
+      opacity: 0.5;
+      border-color: var(--dim);
+    }
+
+    .step.on.blue {
+      border-color: var(--b);
+    }
+
+    .sn {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--bdr);
+      color: var(--dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: 0.3s;
+    }
+
+    .step.on .sn {
+      background: var(--g);
+      color: #000;
+    }
+
+    .step.don .sn {
+      background: var(--dim);
+      color: var(--bg);
+    }
+
+    .step.on.blue .sn {
+      background: var(--b);
+      color: #fff;
+    }
+
+    .sv {
+      display: block;
+      margin-top: 2px;
+      color: var(--b);
+      font-size: 0.55rem;
+      word-break: break-all;
+    }
+
+    /* Approval panel */
+    #approval-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #approval-panel.show {
+      display: flex;
+    }
+
+    .ap-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ap-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.52rem;
+      color: var(--y);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .ap-count {
+      font-size: 0.52rem;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--y);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .req-card {
+      background: var(--bg);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      animation: pop 0.2s ease;
+    }
+
+    .req-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--txt);
+    }
+
+    .req-name small {
+      display: block;
+      font-size: 0.55rem;
+      color: var(--dim);
+      margin-top: 1px;
+    }
+
+    .req-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .rbtn {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .rbtn:hover {
+      opacity: 0.82;
+    }
+
+    .rbtn.acc {
+      background: rgba(16, 217, 160, 0.14);
+      color: var(--g);
+      border: 1px solid rgba(16, 217, 160, 0.3);
+    }
+
+    .rbtn.rej {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--r);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* ── CHAT PANEL ── */
+    #chat-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #chat-hdr {
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--bdr);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      background: var(--s1);
+    }
+
+    .rmeta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rname {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--txt);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rmeta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .rtag {
+      font-family: 'JetBrains Mono', monospace;
+      padding: 1px 8px;
+      border-radius: 20px;
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .rtag.direct {
+      background: rgba(16, 217, 160, 0.1);
+      color: var(--g);
+      border: 1px solid rgba(16, 217, 160, 0.3);
+    }
+
+    .rtag.group {
+      background: rgba(59, 158, 255, 0.1);
+      color: var(--b);
+      border: 1px solid rgba(59, 158, 255, 0.3);
+    }
+
+    .rcount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.57rem;
+      color: var(--txt2);
+    }
+
+    .hdr-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .e2e-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.53rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 217, 160, 0.3);
+      color: var(--g);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* fix #8: copy code button always in header */
+    #copy-code-btn {
+      padding: 5px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      font-weight: 600;
+      background: var(--s2);
+      border: 1px solid var(--bdr);
+      color: var(--txt2);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+      white-space: nowrap;
+    }
+
+    #copy-code-btn:hover {
+      border-color: var(--g);
+      color: var(--g);
+    }
+
+    #leave-btn {
+      padding: 5px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--r);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+      white-space: nowrap;
+    }
+
+    #leave-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: var(--r);
+    }
+
+    /* Leave confirmation bar */
+    #leave-confirm {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 18px;
+      background: rgba(239, 68, 68, 0.06);
+      border-top: 1px solid rgba(239, 68, 68, 0.2);
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: #fca5a5;
+      animation: fadeUp 0.2s ease;
+    }
+
+    #leave-confirm.show {
+      display: flex;
+    }
+
+    #leave-confirm span {
+      flex: 1;
+    }
+
+    #lc-yes {
+      padding: 5px 14px;
+      background: var(--r);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #lc-yes:hover {
+      opacity: 0.85;
+    }
+
+    #lc-no {
+      padding: 5px 14px;
+      background: transparent;
+      border: 1px solid var(--bdr);
+      color: var(--dim);
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #lc-no:hover {
+      color: var(--txt2);
+    }
+
+    /* Messages area */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    /* Waiting state (host waiting for peers) */
+    .wait-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+    }
+
+    .wait-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--g);
+      animation: ringPulse 1.8s ease-out infinite;
+    }
+
+    @keyframes ringPulse {
+      0% {
+        transform: scale(0.7);
+        opacity: 0.9
+      }
+
+      100% {
+        transform: scale(2.2);
+        opacity: 0
+      }
+    }
+
+    .wait-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--txt2);
+      text-align: center;
+    }
+
+    .wait-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      color: var(--dim);
+      text-align: center;
+      line-height: 1.8;
+      max-width: 300px;
+    }
+
+    .code-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border: 1.5px solid rgba(16, 217, 160, 0.45);
+      border-radius: 8px;
+      color: var(--g);
+      background: rgba(16, 217, 160, 0.05);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .code-pill:hover {
+      background: rgba(16, 217, 160, 0.1);
+      border-color: var(--g);
+    }
+
+    .code-copy-hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.57rem;
+      color: var(--dim);
+    }
+
+    /* fix #9: alone state when all peers leave */
+    #alone-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 16px;
+      padding: 40px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    #alone-state.show {
+      display: flex;
+    }
+
+    .alone-ico {
+      font-size: 3rem;
+      opacity: 0.35;
+    }
+
+    .alone-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--txt2);
+      text-align: center;
+    }
+
+    .alone-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--dim);
+      text-align: center;
+      line-height: 1.8;
+      max-width: 290px;
+    }
+
+    .alone-btn {
+      padding: 8px 20px;
+      background: rgba(59, 158, 255, 0.1);
+      border: 1px solid rgba(59, 158, 255, 0.3);
+      color: var(--b);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .alone-btn:hover {
+      background: rgba(59, 158, 255, 0.2);
+      border-color: var(--b);
+    }
+
+    /* Typing indicator */
+    #typing-indicator {
+      padding: 4px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--dim);
+      height: 22px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot-anim {
+      display: inline-flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .dot-anim span {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--dim);
+      animation: dotBounce 1.2s ease-in-out infinite;
+    }
+
+    .dot-anim span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot-anim span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes dotBounce {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0.6);
+        opacity: 0.3
+      }
+
+      40% {
+        transform: scale(1.1);
+        opacity: 1
+      }
+    }
+
+    /* Message bubbles */
+    .msg {
+      max-width: 72%;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      animation: msgIn 0.22s ease;
+    }
+
+    @keyframes msgIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .msg.me {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .msg.peer {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .mname {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.54rem;
+      color: var(--dim);
+      padding: 0 4px;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      word-break: break-word;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .msg.me .bubble {
+      background: linear-gradient(135deg, #0a2018, #0d2c20);
+      border: 1px solid rgba(16, 217, 160, 0.2);
+      color: #a8ffc8;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.peer .bubble {
+      background: var(--s2);
+      border: 1px solid var(--bdr);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg.c1 .bubble {
+      background: #130f1f;
+      border-color: rgba(139, 92, 246, 0.28);
+      color: #ccb8ff;
+    }
+
+    .msg.c2 .bubble {
+      background: #1e1408;
+      border-color: rgba(245, 158, 11, 0.22);
+      color: #fcd9a0;
+    }
+
+    .msg.c3 .bubble {
+      background: #081820;
+      border-color: rgba(59, 158, 255, 0.2);
+      color: #9ecfed;
+    }
+
+    .mtime {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.52rem;
+      color: var(--dim);
+      padding: 0 4px;
+    }
+
+    .sysmsg {
+      align-self: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--dim);
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: var(--s2);
+      border: 1px solid var(--bdr);
+      animation: msgIn 0.2s ease;
+    }
+
+    /* Input area */
+    #input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--bdr);
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+      background: var(--s1);
+      align-items: center;
+    }
+
+    #msg-input {
+      flex: 1;
+      background: var(--s2);
+      border: 1.5px solid var(--bdr);
+      color: var(--txt);
+      padding: 10px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.83rem;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #msg-input:focus {
+      border-color: var(--g);
+      box-shadow: 0 0 0 3px rgba(16, 217, 160, 0.08);
+    }
+
+    #msg-input:disabled {
+      opacity: 0.35;
+    }
+
+    #send-btn {
+      padding: 10px 22px;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+
+    /* ── MOBILE ── */
+    @media(max-width:640px) {
+      #dh-panel {
+        display: none !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 58vh;
+        z-index: 100;
+        border-right: none;
+        border-top: 1px solid var(--bdr);
+      }
+
+      #dh-panel.mob-open {
+        display: flex !important;
+      }
+
+      #main {
+        flex-direction: column;
+      }
+
+      .card {
+        padding: 24px 20px;
+      }
+
+      #dh-toggle-btn {
+        display: flex;
+      }
+
+      .e2e-badge {
+        display: none;
+      }
+
+      .msg {
+        max-width: 86%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔐</div>
+      <div>
+        <div class="logo-wordmark">SAYHI<span>BYE</span></div>
+        <div class="logo-sub" id="algo-name-hdr">DH + SHA-256 + AES-GCM</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <button id="dh-toggle-btn" onclick="toggleDHPanel()">
+        ⚙ Keys
+        <span id="dh-panel-badge"></span>
+      </button>
+      <div class="status-pill" id="conn-pill"><span class="sdot" id="cdot"></span><span id="clbl">offline</span></div>
+      <div class="status-pill" id="key-pill"><span class="sdot" id="kdot"></span><span id="klbl">no key</span></div>
+    </div>
+  </header>
+
+  <!-- Toast container -->
+  <div id="toasts"></div>
+
+  <!-- ═══ ONBOARDING ═══ -->
+  <div id="screens">
+
+    <!-- S1: Name -->
+    <div class="screen active" id="s-name">
+      <div class="card">
+        <div class="hero-badge">🔒 ZERO KNOWLEDGE · PERFECT FORWARD SECRECY</div>
+        <div>
+          <div class="card-title">SayHiBye<br /><em>Secure</em> <span>Chat</span></div>
+
+          <div class="card-sub">End-to-end encrypted. Server sees only ciphertext. No logs, no accounts.</div>
+        </div>
+        <div class="fl">
+          <div class="lbl">Your Display Name</div>
+          <input type="text" id="inp-name" placeholder="alice, bob, sharad…" maxlength="20" />
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.57rem;color:var(--dim);">Letters, numbers,
+            hyphens &amp; underscores only.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-g" onclick="goMode()">CONTINUE →</button>
+        </div>
+        <div class="notice err" id="e-name"></div>
+      </div>
+    </div>
+
+    <!-- S2: Mode -->
+    <div class="screen" id="s-mode">
+      <div class="card">
+        <div>
+          <div class="card-title">Choose <em>Mode</em></div>
+          <div class="card-sub">Select a connection type, then create or join a room.</div>
+        </div>
+        <div class="tile-row">
+          <div class="tile" id="t-direct" onclick="pickMode('direct')">
+            <span class="tile-icon">🔒</span>
+            <div class="tile-name">1-on-1 Chat</div>
+            <div class="tile-desc">Private channel between exactly two people.</div>
+          </div>
+          <div class="tile blue" id="t-group" onclick="pickMode('group')">
+            <span class="tile-icon">👥</span>
+            <div class="tile-name">Group Room</div>
+            <div class="tile-desc">Multi-member encrypted room with host control.</div>
+          </div>
+        </div>
+        <div class="tile-row" id="action-tiles" style="display:none;">
+          <div class="tile" id="t-create" onclick="pickAction('create')">
+            <span class="tile-icon">✚</span>
+            <div class="tile-name">Create Room</div>
+            <div class="tile-desc">You become the host. Share the room code.</div>
+          </div>
+          <div class="tile" id="t-join" onclick="pickAction('join')">
+            <span class="tile-icon">→</span>
+            <div class="tile-name">Join Room</div>
+            <div class="tile-desc">Enter a code. Host must approve entry.</div>
+          </div>
+        </div>
+        <div id="dyn-fields" style="display:none;flex-direction:column;gap:12px;"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goName()">←</button>
+          <button class="btn btn-g" id="btn-go" onclick="goConnect()" disabled>CONNECT</button>
+        </div>
+        <div class="notice err" id="e-mode"></div>
+      </div>
+    </div>
+
+    <!-- S3: Pending -->
+    <div class="screen" id="s-pending">
+      <div class="card" style="align-items:center;text-align:center;gap:18px;">
+        <div class="card-title" style="text-align:center;">Waiting for <em>Host</em></div>
+        <div class="wait-ring"></div>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--txt2);" id="pending-msg">Request
+          sent. Waiting for host approval…</p>
+        <div style="width:100%;">
+          <div
+            style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:0.57rem;color:var(--dim);margin-bottom:5px;">
+            <span>Expires in</span><span id="timeout-count">30s</span>
+          </div>
+          <div id="timeout-bar-wrap">
+            <div id="timeout-bar" style="width:100%;"></div>
+          </div>
+        </div>
+        <button class="btn btn-r" style="width:100%;" id="btn-cancel-req" onclick="cancelRequest()">CANCEL
+          REQUEST</button>
+        <div class="notice err" id="e-pending" style="width:100%;text-align:left;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ MAIN CHAT ═══ -->
+  <div id="main">
+
+    <!-- DH Panel -->
+    <div id="dh-panel">
+      <div class="p-sec">
+        <div class="p-label">
+          DH Key Exchange
+          <span class="host-badge" id="host-lbl" style="display:none;">👑 HOST</span>
+        </div>
+        <div class="algo-pill" id="algo-pill">DH · SHA-256 · AES-GCM</div>
+      </div>
+
+      <div class="p-sec" style="padding:10px 14px;">
+        <canvas id="dhc" width="248" height="162"></canvas>
+      </div>
+
+      <div class="p-sec">
+        <div class="m-label">Members <span id="mc">1</span>/<span id="mm">?</span></div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div id="approval-panel" class="p-sec">
+        <div class="ap-row">
+          <span class="ap-title">Join Requests</span>
+          <span class="ap-count" id="req-count">0</span>
+        </div>
+        <div id="req-list" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <div class="p-sec" style="flex:1;">
+        <div class="p-label" style="margin-bottom:12px;">Key Exchange Steps</div>
+        <div class="step" id="st1">
+          <div class="sn">1</div>
+          <div>Public params<span class="sv" id="v1"></span></div>
+        </div>
+        <div class="step" id="st2">
+          <div class="sn">2</div>
+          <div>Network latency seed<span class="sv" id="v2"></span></div>
+        </div>
+        <div class="step" id="st3">
+          <div class="sn">3</div>
+          <div>Private key generated<span class="sv" id="v3"></span></div>
+        </div>
+        <div class="step" id="st4">
+          <div class="sn">4</div>
+          <div>Public key computed<span class="sv" id="v4"></span></div>
+        </div>
+        <div class="step" id="st5">
+          <div class="sn">5</div>
+          <div>Peer key(s) received<span class="sv" id="v5"></span></div>
+        </div>
+        <div class="step" id="st6">
+          <div class="sn">6</div>
+          <div>Shared secret computed<span class="sv" id="v6"></span></div>
+        </div>
+        <div class="step" id="st7">
+          <div class="sn">7</div>
+          <div>AES-GCM key derived<span class="sv" id="v7"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chat-panel">
+      <div id="chat-hdr">
+        <div class="rmeta">
+          <div class="rname" id="lbl-room">—</div>
+          <div class="rmeta-row">
+            <span class="rtag" id="lbl-rtype">—</span>
+            <span class="rcount"><span id="lbl-mc">1</span>/<span id="lbl-mm">?</span> members</span>
+          </div>
+        </div>
+        <div class="hdr-actions">
+          <div class="e2e-badge">🔐 E2E + PFS</div>
+          <!-- fix #8: always-visible copy button -->
+          <button id="copy-code-btn" onclick="copyRoomCodeFromHeader()" title="Copy room code">📋 Code</button>
+          <button id="leave-btn" onclick="promptLeave()" title="Leave room">✕ Leave</button>
+        </div>
+      </div>
+
+      <!-- Leave confirmation -->
+      <div id="leave-confirm">
+        <span>Leave this room? Your encrypted session will end.</span>
+        <button id="lc-yes" onclick="confirmLeave()">LEAVE</button>
+        <button id="lc-no" onclick="dismissLeave()">CANCEL</button>
+      </div>
+
+      <!-- Host waiting for first peer -->
+      <div class="wait-wrap" id="wt-peer">
+        <div class="wait-ring"></div>
+        <div class="wait-title" id="wt-msg">Waiting for someone to join…</div>
+        <div class="code-pill" id="wt-code" onclick="copyRoomCode()"></div>
+        <div class="wait-sub">Share this code with the people you want to chat with securely.</div>
+        <small class="code-copy-hint" id="wt-hint">Click the code to copy it</small>
+      </div>
+
+      <!-- Messages -->
+      <div id="messages" style="display:none;"></div>
+
+      <!-- fix #9: shown when all peers have left -->
+      <div id="alone-state">
+        <div class="alone-ico">👤</div>
+        <div class="alone-title">You're the only one here</div>
+        <div class="alone-sub">Everyone else has left. Copy the room code to invite someone, or leave the room.</div>
+        <button class="alone-btn" onclick="copyRoomCodeFromHeader()">📋 Copy Room Code</button>
+      </div>
+
+      <div id="typing-indicator"></div>
+
+      <div id="input-area">
+        <input type="text" id="msg-input" placeholder="Message (encrypted before sending)…" disabled maxlength="2000" />
+        <button class="btn btn-g" id="send-btn" onclick="sendMsg()" disabled>SEND</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/crypto/provider.js"></script>
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    //  SayHiBye — client
+    //  All 14 bugs fixed. Full redesign.
+    // ═══════════════════════════════════════════════════════════════
+
+    const meta = CryptoRegistry.provider.metadata;
+    document.getElementById("algo-pill").textContent = `${meta.keyExchange.split(" ")[0]} · ${meta.kdf} · ${meta.cipher}`;
+    document.getElementById("algo-name-hdr").textContent = `${meta.keyExchange.split(" ")[0]} + ${meta.kdf} + AES-GCM`;
+
+    // ── STATE ──────────────────────────────────────────────────────
+    let uname = "", mode = "", action = "", roomId = "", maxMem = 2;
+    let socket;
+    let keyPair = null;
+    let aesKey = null;         // 1-on-1 key / fallback
+    let peerKeys = {};          // fix #1: peerName → per-peer AES key
+    let peerColors = {}, colorIdx = 0;
+    let isHost = false, curStep = 0, ctx2;
+    let socketInited = false;
+    let pendingTimerInterval = null;
+    let typingTimer = null, isTyping = false;
+    let unreadCount = 0;        // fix #12
+    const originalTitle = document.title;
+    let titleFlashInterval = null;
+
+    // ── SANITIZATION ───────────────────────────────────────────────
+    function sanitizeText(s, max = 2000) { return String(s).replace(/[<>"'&]/g, "").slice(0, max); }
+    function sanitizeName(s) { return String(s).replace(/[^a-zA-Z0-9\-_]/g, "").slice(0, 20); }
+    function sanitizeRoomId(s) { return String(s).toLowerCase().replace(/[^a-z0-9\-_]/g, "").slice(0, 24); }
+    function esc(t) {
+      return String(t)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // ── fix #12: TAB TITLE NOTIFICATION ───────────────────────────
+    function notifyTab(count) {
+      if (document.hasFocus()) return;
+      unreadCount = count;
+      if (titleFlashInterval) clearInterval(titleFlashInterval);
+      let show = true;
+      titleFlashInterval = setInterval(() => {
+        document.title = show ? `(${unreadCount}) New message — SayHiBye` : originalTitle;
+        show = !show;
+      }, 1000);
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        unreadCount = 0;
+        if (titleFlashInterval) { clearInterval(titleFlashInterval); titleFlashInterval = null; }
+        document.title = originalTitle;
+      }
+    });
+
+    // ── TOAST SYSTEM ───────────────────────────────────────────────
+    function toast(msg, type = "info", icon = null) {
+      const icons = { ok: "✓", err: "✗", info: "ℹ", warn: "⚠" };
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span class="toast-ico">${icon || icons[type]}</span><span>${esc(msg)}</span>`;
+      document.getElementById("toasts").appendChild(el);
+      setTimeout(() => {
+        el.classList.add("exit");
+        setTimeout(() => el.remove(), 300);
+      }, 3500);
+    }
+
+    // ── SCREEN NAV ─────────────────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      const el = document.getElementById(id);
+      if (el) el.classList.add("active");
+    }
+
+    function goMode() {
+      const raw = document.getElementById("inp-name").value.trim();
+      uname = sanitizeName(raw);
+      if (!uname) { showNotice("e-name", "err", "Valid name required (letters, numbers, hyphens)."); return; }
+      if (uname !== raw) {
+        document.getElementById("inp-name").value = uname;
+        showNotice("e-name", "info", `Name sanitized to: "${uname}"`);
+        return;
+      }
+      hideNotice("e-name");
+      showScreen("s-mode");
+    }
+    function goName() { showScreen("s-name"); }
+    document.getElementById("inp-name").addEventListener("keydown", e => { if (e.key === "Enter") goMode(); });
+
+    // ── MODE / ACTION ──────────────────────────────────────────────
+    function pickMode(m) {
+      mode = m; action = "";
+      document.getElementById("t-direct").classList.toggle("sel", m === "direct");
+      document.getElementById("t-group").classList.toggle("sel", m === "group");
+      document.getElementById("action-tiles").style.display = "grid";
+      ["t-create", "t-join"].forEach(id => document.getElementById(id).classList.remove("sel", "blue"));
+      document.getElementById("dyn-fields").style.display = "none";
+      document.getElementById("dyn-fields").innerHTML = "";
+      document.getElementById("btn-go").disabled = true;
+      hideNotice("e-mode");
+    }
+
+    function pickAction(a) {
+      action = a;
+      const isGroup = mode === "group";
+      ["t-create", "t-join"].forEach(id => document.getElementById(id).classList.remove("sel", "blue"));
+      document.getElementById(`t-${a}`).classList.add("sel");
+      if (isGroup) document.getElementById(`t-${a}`).classList.add("blue");
+
+      const df = document.getElementById("dyn-fields");
+      df.style.display = "flex"; df.innerHTML = "";
+
+      if (a === "create") {
+        df.innerHTML = `
+      <div class="fl">
+        <div class="lbl">Room Name</div>
+        <input type="text" id="inp-rid" placeholder="e.g. alpha-7, my-room…" maxlength="24"/>
+        <div class="notice info show">Active room names are blocked. Empty rooms are recycled.</div>
+      </div>
+      ${isGroup ? `<div class="fl"><div class="lbl">Max Members (2–10)</div><input type="number" id="inp-max" min="2" max="10" value="4"/></div>` : ""}`;
+      } else {
+        df.innerHTML = `
+      <div class="fl">
+        <div class="lbl">Room Code</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="inp-rid" placeholder="Enter room code…" maxlength="24" style="flex:1;"/>
+          <button class="btn btn-ghost" onclick="checkRoom()" style="flex:0;padding:10px 14px;font-size:.65rem;">CHECK</button>
+        </div>
+        <div class="notice" id="room-check-msg" style="margin-top:4px;"></div>
+      </div>`;
+      }
+      document.getElementById("btn-go").disabled = (a === "join");
+      if (a === "create") document.getElementById("btn-go").disabled = false;
+      setTimeout(() => document.getElementById("inp-rid")?.focus(), 50);
+    }
+
+    function checkRoom() {
+      const rid = sanitizeRoomId(document.getElementById("inp-rid")?.value || "");
+      if (!rid) return;
+      initSocket();
+      socket.emit("check_room", { roomId: rid });
+      socket.once("room_check_result", ({ ok, reason, hostName, currentMembers, maxMembers: mx }) => {
+        const el = document.getElementById("room-check-msg");
+        if (!el) return;
+        if (ok) {
+          el.className = "notice ok show";
+          el.textContent = `Room found — host: ${esc(hostName)}  ·  ${currentMembers}/${mx} members`;
+          document.getElementById("btn-go").disabled = false;
+        } else {
+          el.className = "notice err show";
+          el.textContent = reason;
+          document.getElementById("btn-go").disabled = true;
+        }
+      });
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter" && document.getElementById("inp-rid") === document.activeElement) {
+        if (action === "join") checkRoom(); else if (action === "create") goConnect();
+      }
+    });
+
+    // ── CONNECT ────────────────────────────────────────────────────
+    async function goConnect() {
+      hideNotice("e-mode");
+      const ridInp = document.getElementById("inp-rid");
+      if (!ridInp?.value.trim()) { showNotice("e-mode", "err", "Please enter a room name."); return; }
+
+      roomId = sanitizeRoomId(ridInp.value);
+      if (!roomId) { showNotice("e-mode", "err", "Room name: letters, numbers, hyphens only."); return; }
+
+      maxMem = (mode === "group" && action === "create")
+        ? Math.min(Math.max(parseInt(document.getElementById("inp-max")?.value) || 4, 2), 10)
+        : 2;
+
+      initSocket();
+      const latency = await measureLatency();
+      keyPair = await CryptoRegistry.provider.generateKeyPair(latency);
+
+      if (action === "create") {
+        socket.emit("create_room", { roomId, username: uname, maxMembers: maxMem, type: mode });
+      } else {
+        showScreen("s-pending");
+        document.getElementById("screens").style.display = "flex";
+        document.getElementById("pending-msg").textContent = `Request sent to "${roomId}". Waiting for host…`;
+        startPendingTimeout();
+        socket.emit("request_join", { roomId, username: uname });
+      }
+    }
+
+    // ── TIMEOUT + CANCEL ───────────────────────────────────────────
+    const TIMEOUT_SEC = 30;
+
+    function startPendingTimeout() {
+      let remaining = TIMEOUT_SEC;
+      document.getElementById("timeout-count").textContent = `${remaining}s`;
+      document.getElementById("timeout-bar").style.width = "100%";
+      pendingTimerInterval = setInterval(() => {
+        remaining--;
+        document.getElementById("timeout-count").textContent = `${remaining}s`;
+        document.getElementById("timeout-bar").style.width = `${(remaining / TIMEOUT_SEC) * 100}%`;
+        if (remaining <= 0) { clearPendingTimer(); onRequestTimeout(); }
+      }, 1000);
+    }
+
+    function clearPendingTimer() {
+      if (pendingTimerInterval) { clearInterval(pendingTimerInterval); pendingTimerInterval = null; }
+    }
+
+    function onRequestTimeout() {
+      if (socket) socket.emit("cancel_request", { roomId });
+      showNotice("e-pending", "err", "Request timed out. The host didn't respond in time.");
+      document.getElementById("pending-msg").textContent = "Request expired.";
+      // fix #10: soft reset (no page reload)
+      const btn = document.getElementById("btn-cancel-req");
+      btn.textContent = "TRY AGAIN";
+      btn.onclick = () => softReset();
+    }
+
+    function cancelRequest() {
+      clearPendingTimer();
+      if (socket) socket.emit("cancel_request", { roomId });
+      softReset(); // fix #4: clean up socket state
+    }
+
+    // fix #4: centralized soft reset — cleans socket + state
+    function softReset() {
+      clearPendingTimer();
+      if (socket) { socket.disconnect(); socket = null; }
+      socketInited = false;
+      keyPair = null; aesKey = null;
+      peerKeys = {}; peerColors = {}; colorIdx = 0;
+      isHost = false; curStep = 0;
+      roomId = ""; mode = ""; action = "";
+      unreadCount = 0;
+      if (titleFlashInterval) { clearInterval(titleFlashInterval); titleFlashInterval = null; }
+      document.title = originalTitle;
+
+      const btn = document.getElementById("btn-cancel-req");
+      if (btn) { btn.textContent = "CANCEL REQUEST"; btn.onclick = cancelRequest; }
+
+      document.getElementById("screens").style.display = "flex";
+      document.getElementById("main").style.display = "none";
+      setConn(false); setKey(false);
+      showScreen("s-mode");
+      hideNotice("e-mode"); hideNotice("e-pending"); hideNotice("e-name");
+    }
+
+    // ── SOCKET INIT ────────────────────────────────────────────────
+    function initSocket() {
+      if (socketInited) return;
+      socketInited = true;
+
+      socket = io({ reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 10 });
+
+      socket.on("connect", () => { setConn(true); });
+      socket.on("disconnect", (reason) => {
+        setConn(false); setKey(false);
+        if (document.getElementById("main").style.display !== "none")
+          addSys(`⚠️ Disconnected (${reason}). Reconnecting…`);
+      });
+
+      socket.on("reconnect", async (attempt) => {
+        setConn(true);
+        addSys(`✓ Reconnected after ${attempt} attempt(s). Re-establishing keys…`);
+        const latency = await measureLatency();
+        keyPair = await CryptoRegistry.provider.generateKeyPair(latency);
+        aesKey = null; peerKeys = {}; setKey(false);
+        socket.emit("rejoin_room", { roomId, username: uname });
+        socket.emit("public_key", keyPair.publicKey);
+      });
+
+      socket.on("reconnect_failed", () => { addSys("✗ Could not reconnect. Please refresh."); });
+
+      // Room events
+      socket.on("room_created", (data) => enterChat({ ...data, isHost: true }));
+      socket.on("request_approved", (data) => { clearPendingTimer(); enterChat({ ...data, isHost: false }); });
+
+      socket.on("request_rejected", ({ reason }) => {
+        clearPendingTimer();
+        showNotice("e-pending", "err", reason || "Your request was rejected.");
+        document.getElementById("pending-msg").textContent = "Entry denied.";
+        // fix #10: soft reset button
+        const btn = document.getElementById("btn-cancel-req");
+        btn.textContent = "TRY AGAIN";
+        btn.onclick = () => softReset();
+      });
+
+      socket.on("create_error", (msg) => {
+        showScreen("s-mode");
+        document.getElementById("screens").style.display = "flex";
+        showNotice("e-mode", "err", msg);
+      });
+
+      socket.on("join_error", (msg) => {
+        clearPendingTimer();
+        showNotice("e-pending", "err", msg);
+      });
+
+      socket.on("peer_joined", ({ username, currentMembers, maxMembers: mx }) => {
+        addChip(username, false);
+        updateCount(currentMembers, mx);
+        addSys(`${esc(username)} joined the room`);
+        toast(`${username} joined`, "ok", "👋");
+        socket.emit("public_key", keyPair.publicKey);
+        // Hide alone state if it was showing
+        document.getElementById("alone-state").classList.remove("show");
+        document.getElementById("messages").style.display = "flex";
+      });
+
+      socket.on("peer_key", async ({ key: pkStr, username: pName }) => {
+        stepOn(5); document.getElementById("v5").textContent = `${esc(pName)}: received`;
+        stepOn(6);
+        const secret = await CryptoRegistry.provider.computeSecret(pkStr, keyPair.privateKey);
+        document.getElementById("v6").textContent = "S computed ✓";
+        stepOn(7);
+        const derived = await CryptoRegistry.provider.deriveAESKey(secret);
+        // fix #1: store per-peer key — never overwrite another peer's key
+        peerKeys[pName] = derived;
+        aesKey = derived; // 1-on-1 compatibility
+        document.getElementById("v7").textContent = `${meta.kdf} → AES-GCM [${Object.keys(peerKeys).length} peer(s)] ✓`;
+        setKey(true);
+        enableChat();
+        addSys(`🔐 Secure channel ready with ${esc(pName)}`);
+        toast(`Encrypted channel with ${pName}`, "ok", "🔐");
+        flashCanvas();
+        document.getElementById("wt-peer").style.display = "none";
+        document.getElementById("messages").style.display = "flex";
+        setTimeout(() => document.getElementById("msg-input").focus(), 100);
+      });
+
+      socket.on("message", async ({ iv, data, senderName }) => {
+        const key = peerKeys[senderName] || aesKey;
+        if (!key) return;
+        try {
+          const text = await CryptoRegistry.provider.decrypt({ iv, data }, key);
+          addMsg("peer", text, senderName);
+          notifyTab(unreadCount + 1); // fix #12
+        } catch { addSys("⚠️ Decryption failed — keys may be out of sync."); }
+      });
+
+      // fix #3: server now sends currentMembers in peer_left
+      socket.on("peer_left", ({ username, currentMembers }) => {
+        addSys(`${esc(username)} left`);
+        toast(`${username} left the room`, "warn", "👋");
+        markChipOffline(username);
+        delete peerKeys[username];
+
+        // Update count if server sent it
+        if (typeof currentMembers === "number") {
+          document.getElementById("mc").textContent = currentMembers;
+          document.getElementById("lbl-mc").textContent = currentMembers;
+        }
+
+        if (Object.keys(peerKeys).length === 0) {
+          disableChat();
+          setKey(false);
+          // fix #9: show "alone" state
+          document.getElementById("messages").style.display = "none";
+          document.getElementById("alone-state").classList.add("show");
+        }
+      });
+
+      socket.on("host_changed", ({ newHost }) => {
+        addSys(`👑 ${esc(newHost)} is now the host`);
+        toast(`${newHost} is now the host`, "warn", "👑");
+        if (newHost === uname) {
+          isHost = true;
+          document.getElementById("host-lbl").style.display = "inline";
+          document.getElementById("approval-panel").classList.add("show");
+        }
+      });
+
+      socket.on("join_request", ({ reqId, username, socketId }) => {
+        showJoinRequest(reqId, username, socketId);
+        toast(`${username} wants to join`, "info", "🚪");
+        // fix #11: show badge count on mobile toggle button
+        updateReqBadge();
+      });
+
+      socket.on("request_cancelled", ({ socketId, username }) => {
+        document.getElementById(`req-${socketId}`)?.remove();
+        updateReqCount();
+        addSys(`${esc(username)} cancelled their join request`);
+      });
+
+      socket.on("room_full", ({ memberNames }) => {
+        addSys(`🔒 Room full: ${memberNames.map(esc).join(", ")}`);
+        toast("Room is now full 🔒", "info");
+      });
+
+      socket.on("typing", ({ username: tn }) => {
+        if (tn !== uname) {
+          const ti = document.getElementById("typing-indicator");
+          ti.innerHTML = `${esc(tn)} is typing <span class="dot-anim"><span></span><span></span><span></span></span>`;
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(() => { ti.innerHTML = ""; }, 2500);
+        }
+      });
+
+      socket.on("name_taken", () => {
+        showNotice("e-pending", "err", "That name is taken in this room. Go back and choose another.");
+      });
+
+      socket.on("error_notice", (msg) => { toast(msg, "err"); });
+    }
+
+    // ── ENTER CHAT ─────────────────────────────────────────────────
+    function enterChat(data) {
+      isHost = data.isHost || false;
+      document.getElementById("screens").style.display = "none";
+      document.getElementById("main").style.display = "flex";
+
+      const rType = data.type || mode;
+      const mMax = data.maxMembers || maxMem;
+      const mCur = data.currentMembers || 1;
+
+      document.getElementById("lbl-room").textContent = data.roomId || roomId;
+      document.getElementById("lbl-rtype").textContent = rType;
+      document.getElementById("lbl-rtype").className = "rtag " + rType;
+      document.getElementById("lbl-mm").textContent = mMax;
+      document.getElementById("lbl-mc").textContent = mCur;
+      document.getElementById("mm").textContent = mMax;
+      document.getElementById("mc").textContent = mCur;
+
+      if (isHost) {
+        document.getElementById("host-lbl").style.display = "inline";
+        document.getElementById("approval-panel").classList.add("show");
+        document.getElementById("wt-msg").textContent = "Room ready. Share this code:";
+        document.getElementById("wt-code").textContent = data.roomId || roomId;
+        document.getElementById("wt-hint").style.display = "block";
+      } else {
+        document.getElementById("wt-msg").textContent = "Approved! Setting up encryption…";
+        document.getElementById("wt-code").style.display = "none";
+        document.getElementById("wt-hint").style.display = "none";
+      }
+
+      addChip(uname, true);
+      if (data.memberNames) data.memberNames.forEach(n => { if (n !== uname) addChip(n, false); });
+
+      initCanvas();
+      runDHVisual();
+      socket.emit("public_key", keyPair.publicKey);
+    }
+
+    // ── DH VISUAL ─────────────────────────────────────────────────
+    function runDHVisual() {
+      curStep = 0;
+      stepOn(1); document.getElementById("v1").textContent = meta.keyExchange;
+      setTimeout(() => {
+        stepOn(2); document.getElementById("v2").textContent = "ping measured → seed applied";
+        stepOn(3); document.getElementById("v3").textContent = "private key: [secured]";
+        stepOn(4); document.getElementById("v4").textContent = "public key: " + keyPair.publicKey.slice(0, 12) + "…";
+      }, 80);
+    }
+
+    function stepOn(n) {
+      if (curStep > 0) {
+        const p = document.getElementById("st" + curStep);
+        if (p) { p.classList.remove("on", "blue"); p.classList.add("don"); }
+      }
+      curStep = n;
+      const el = document.getElementById("st" + n);
+      if (el) { el.classList.add("on"); if (mode === "group") el.classList.add("blue"); }
+      drawCanvas(n);
+    }
+
+    // ── SEND MESSAGE — fix #1: per-peer group encryption ──────────
+    async function sendMsg() {
+      if (Object.keys(peerKeys).length === 0 && !aesKey) return;
+      const inp = document.getElementById("msg-input");
+      const txt = sanitizeText(inp.value.trim());
+      if (!txt) return;
+
+      if (mode === "group" && Object.keys(peerKeys).length > 0) {
+        // fix #1: encrypt individually for each peer → group_message
+        const payloads = {};
+        for (const [pName, key] of Object.entries(peerKeys)) {
+          payloads[pName] = await CryptoRegistry.provider.encrypt(txt, key);
+        }
+        socket.emit("group_message", payloads);
+      } else {
+        // 1-on-1: single ciphertext
+        const enc = await CryptoRegistry.provider.encrypt(txt, aesKey);
+        socket.emit("message", enc);
+      }
+
+      addMsg("me", txt, uname);
+      inp.value = "";
+      isTyping = false;
+    }
+
+    document.getElementById("msg-input").addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+    });
+
+    document.getElementById("msg-input").addEventListener("input", () => {
+      if (!socket || !roomId) return;
+      if (!isTyping) {
+        isTyping = true;
+        socket.emit("typing", { roomId });
+        setTimeout(() => { isTyping = false; }, 2000);
+      }
+    });
+
+    // ── LATENCY ───────────────────────────────────────────────────
+    async function measureLatency() {
+      const t = performance.now();
+      await fetch("/socket.io/socket.io.js", { method: "HEAD", cache: "no-store" }).catch(() => { });
+      return Math.round(performance.now() - t);
+    }
+
+    // ── HOST APPROVAL ─────────────────────────────────────────────
+    function showJoinRequest(reqId, username, socketId) {
+      const list = document.getElementById("req-list");
+      const card = document.createElement("div");
+      card.className = "req-card"; card.id = `req-${socketId}`;
+      card.innerHTML = `
+    <div class="req-name">${esc(username)}<small>wants to join</small></div>
+    <div class="req-btns">
+      <button class="rbtn acc" onclick="approveReq('${reqId}','${socketId}')">✓ Accept</button>
+      <button class="rbtn rej" onclick="rejectReq('${reqId}','${socketId}')">✗ Reject</button>
+    </div>`;
+      list.appendChild(card);
+      updateReqCount();
+      const panel = document.getElementById("approval-panel");
+      panel.style.outline = "1px solid var(--y)";
+      setTimeout(() => panel.style.outline = "none", 1200);
+    }
+
+    function approveReq(reqId, socketId) {
+      socket.emit("approve_request", { reqId, socketId });
+      document.getElementById(`req-${socketId}`)?.remove();
+      updateReqCount();
+    }
+    function rejectReq(reqId, socketId) {
+      socket.emit("reject_request", { reqId, socketId });
+      document.getElementById(`req-${socketId}`)?.remove();
+      updateReqCount();
+    }
+    function updateReqCount() {
+      const n = document.getElementById("req-list").children.length;
+      document.getElementById("req-count").textContent = n;
+      updateReqBadge();
+    }
+    // fix #11: badge on mobile DH toggle
+    function updateReqBadge() {
+      const n = document.getElementById("req-list").children.length;
+      const badge = document.getElementById("dh-panel-badge");
+      badge.textContent = n;
+      n > 0 ? badge.classList.add("show") : badge.classList.remove("show");
+    }
+
+    // ── ROOM CODE COPY ─────────────────────────────────────────────
+    function copyRoomCode() {
+      const code = document.getElementById("wt-code").textContent;
+      if (!code) return;
+      navigator.clipboard?.writeText(code).then(() => {
+        document.getElementById("wt-hint").textContent = "✓ Copied!";
+        setTimeout(() => { document.getElementById("wt-hint").textContent = "Click the code to copy it"; }, 2000);
+      });
+    }
+
+    // fix #8: always-available header copy button
+    function copyRoomCodeFromHeader() {
+      if (!roomId) return;
+      navigator.clipboard?.writeText(roomId).then(() => {
+        const btn = document.getElementById("copy-code-btn");
+        const orig = btn.textContent;
+        btn.textContent = "✓ Copied!";
+        btn.style.cssText += "border-color:var(--g);color:var(--g);";
+        toast("Room code copied!", "ok", "📋");
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.style.borderColor = ""; btn.style.color = "";
+        }, 2000);
+      });
+    }
+
+    // ── LEAVE ROOM ─────────────────────────────────────────────────
+    function promptLeave() {
+      document.getElementById("leave-confirm").classList.add("show");
+      document.getElementById("leave-btn").disabled = true;
+    }
+    function dismissLeave() {
+      document.getElementById("leave-confirm").classList.remove("show");
+      document.getElementById("leave-btn").disabled = false;
+    }
+    function confirmLeave() {
+      if (socket) {
+        socket.emit("leave_room"); // fix #5: server uses socket.roomId (no payload needed)
+        socket.disconnect();
+      }
+
+      // Reset all state
+      uname = ""; mode = ""; action = ""; roomId = ""; maxMem = 2;
+      socket = null; keyPair = null; aesKey = null;
+      peerKeys = {}; peerColors = {}; colorIdx = 0;
+      isHost = false; curStep = 0; socketInited = false;
+      clearPendingTimer();
+      unreadCount = 0;
+      if (titleFlashInterval) { clearInterval(titleFlashInterval); titleFlashInterval = null; }
+      document.title = originalTitle;
+
+      // Reset UI
+      document.getElementById("main").style.display = "none";
+      document.getElementById("screens").style.display = "flex";
+      document.getElementById("messages").innerHTML = "";
+      document.getElementById("messages").style.display = "none";
+      document.getElementById("chips").innerHTML = "";
+      document.getElementById("req-list").innerHTML = "";
+      document.getElementById("approval-panel").classList.remove("show");
+      document.getElementById("host-lbl").style.display = "none";
+      document.getElementById("wt-peer").style.display = "flex";
+      document.getElementById("wt-code").style.display = "block";
+      document.getElementById("wt-code").textContent = "";
+      document.getElementById("wt-hint").style.display = "block";
+      document.getElementById("alone-state").classList.remove("show");
+      document.getElementById("leave-confirm").classList.remove("show");
+      document.getElementById("leave-btn").disabled = false;
+      document.getElementById("typing-indicator").innerHTML = "";
+      document.getElementById("msg-input").value = "";
+      document.getElementById("dh-panel-badge").classList.remove("show");
+      document.getElementById("dh-toggle-btn").classList.remove("panel-open");
+      document.getElementById("dh-panel").classList.remove("mob-open");
+
+      // Reset DH steps
+      for (let i = 1; i <= 7; i++) {
+        const el = document.getElementById("st" + i);
+        el.classList.remove("on", "don", "blue");
+        document.getElementById("v" + i).textContent = "";
+      }
+
+      disableChat(); setConn(false); setKey(false);
+      showScreen("s-name");
+      document.getElementById("inp-name").value = "";
+      hideNotice("e-name");
+    }
+
+    // ── UI HELPERS ─────────────────────────────────────────────────
+    function enableChat() { document.getElementById("msg-input").disabled = false; document.getElementById("send-btn").disabled = false; }
+    function disableChat() { document.getElementById("msg-input").disabled = true; document.getElementById("send-btn").disabled = true; }
+
+    function addMsg(who, text, name) {
+      const w = document.getElementById("messages");
+      if (w.style.display !== "flex") w.style.display = "flex";
+      const d = document.createElement("div");
+      const cc = who === "me" ? "" : getPeerColor(name);
+      d.className = `msg ${who} ${cc}`;
+      const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      d.innerHTML = `${mode === "group" ? `<div class="mname">${esc(name)}</div>` : ""}<div class="bubble">${esc(text)}</div><div class="mtime">${t}</div>`;
+      w.appendChild(d);
+      w.scrollTop = w.scrollHeight;
+    }
+
+    function addSys(txt) {
+      const w = document.getElementById("messages");
+      if (w.style.display !== "flex") w.style.display = "flex";
+      const d = document.createElement("div"); d.className = "sysmsg"; d.textContent = txt;
+      w.appendChild(d); w.scrollTop = w.scrollHeight;
+    }
+
+    function getPeerColor(n) {
+      if (!peerColors[n]) { colorIdx = (colorIdx % 3) + 1; peerColors[n] = `c${colorIdx}`; }
+      return peerColors[n];
+    }
+
+    function addChip(name, isMe) {
+      if (document.querySelector(`.chip[data-n="${CSS.escape(name)}"]`)) return;
+      const c = document.createElement("div");
+      c.className = `chip ${isMe ? "me" : "live"}`; c.dataset.n = name;
+      const initials = name.slice(0, 2).toUpperCase();
+      c.innerHTML = `<div class="chip-av">${initials}</div><span class="chip-label">${esc(name)}${isMe ? " (you)" : ""}</span>`;
+      document.getElementById("chips").appendChild(c);
+    }
+
+    function markChipOffline(name) {
+      const c = document.querySelector(`.chip[data-n="${CSS.escape(name)}"]`);
+      if (c) { c.classList.remove("live"); c.classList.add("offline"); }
+    }
+
+    function updateCount(cur, max) {
+      document.getElementById("mc").textContent = cur;
+      document.getElementById("mm").textContent = max;
+      document.getElementById("lbl-mc").textContent = cur;
+      document.getElementById("lbl-mm").textContent = max;
+    }
+
+    function setConn(on) {
+      const pill = document.getElementById("conn-pill");
+      document.getElementById("cdot").style.background = on ? "var(--g)" : "var(--dim)";
+      document.getElementById("clbl").textContent = on ? "connected" : "offline";
+      on ? pill.classList.add("on") : pill.classList.remove("on");
+    }
+
+    function setKey(on) {
+      const pill = document.getElementById("key-pill");
+      document.getElementById("cdot"); // keeps reference alive
+      document.getElementById("klbl").textContent = on ? "E2E active" : "no key";
+      on ? pill.classList.add("key") : pill.classList.remove("key");
+    }
+
+    function showNotice(id, type, msg) {
+      const e = document.getElementById(id);
+      if (!e) return;
+      e.className = `notice ${type} show`; e.textContent = msg;
+    }
+    function hideNotice(id) {
+      const e = document.getElementById(id);
+      if (e) e.classList.remove("show");
+    }
+
+    // fix #11: visual active state on toggle button
+    function toggleDHPanel() {
+      const panel = document.getElementById("dh-panel");
+      const btn = document.getElementById("dh-toggle-btn");
+      panel.classList.toggle("mob-open");
+      btn.classList.toggle("panel-open", panel.classList.contains("mob-open"));
+    }
+
+    // ── CANVAS ─────────────────────────────────────────────────────
+    function initCanvas() { ctx2 = document.getElementById("dhc").getContext("2d"); drawCanvas(0); }
+
+    function drawCanvas(step) {
+      if (!ctx2) return;
+      const W = 248, H = 162;
+      ctx2.clearRect(0, 0, W, H); ctx2.fillStyle = "#030712"; ctx2.fillRect(0, 0, W, H);
+      ctx2.strokeStyle = "rgba(26,37,64,0.65)"; ctx2.lineWidth = 1;
+      for (let x = 0; x < W; x += 24) { ctx2.beginPath(); ctx2.moveTo(x, 0); ctx2.lineTo(x, H); ctx2.stroke(); }
+      for (let y = 0; y < H; y += 16) { ctx2.beginPath(); ctx2.moveTo(0, y); ctx2.lineTo(W, y); ctx2.stroke(); }
+
+      if (mode === "group") {
+        const you = [38, 84], srv = [124, 30], p1 = [210, 50], p2 = [210, 118];
+        cnode(you[0], you[1], "#10d9a0", "YOU", step >= 3);
+        cnode(srv[0], srv[1], "#475a7a", "SRV", true);
+        cnode(p1[0], p1[1], "#3b9eff", "P1", step >= 5);
+        cnode(p2[0], p2[1], "#8b5cf6", "P2", step >= 5);
+        if (step >= 4) { carrow(you[0], you[1], srv[0], srv[1], "#10d9a0"); carrow(srv[0], srv[1], p1[0], p1[1], "#3b9eff"); carrow(srv[0], srv[1], p2[0], p2[1], "#8b5cf6"); }
+        if (step >= 6) { ctx2.strokeStyle = "#ef4444"; ctx2.lineWidth = 1.5; ctx2.setLineDash([5, 4]); ctx2.beginPath(); ctx2.moveTo(you[0] + 17, you[1] + 8); ctx2.quadraticCurveTo(124, 152, p1[0] - 17, p1[1] + 8); ctx2.stroke(); ctx2.beginPath(); ctx2.moveTo(you[0] + 17, you[1] + 8); ctx2.quadraticCurveTo(124, 152, p2[0] - 17, p2[1] + 5); ctx2.stroke(); ctx2.setLineDash([]); ctx2.fillStyle = "#ef4444"; ctx2.font = "6px JetBrains Mono"; ctx2.textAlign = "center"; ctx2.fillText("shared secrets (local only)", 124, 160); }
+        if (step >= 7) { ctx2.fillStyle = "#10d9a0"; ctx2.font = "bold 8px JetBrains Mono"; ctx2.textAlign = "center"; ctx2.fillText("AES-GCM READY", 124, 136); }
+      } else {
+        const you = [42, 84], srv = [124, 32], peer = [206, 84];
+        cnode(you[0], you[1], "#10d9a0", "YOU", step >= 3);
+        cnode(srv[0], srv[1], "#475a7a", "SRV", true);
+        cnode(peer[0], peer[1], "#3b9eff", "PEER", step >= 5);
+        if (step >= 4) { carrow(you[0], you[1], srv[0], srv[1], "#10d9a0"); carrow(srv[0], srv[1], peer[0], peer[1], "#3b9eff"); }
+        if (step >= 6) { ctx2.strokeStyle = "#ef4444"; ctx2.lineWidth = 1.5; ctx2.setLineDash([5, 4]); ctx2.beginPath(); ctx2.moveTo(you[0] + 17, you[1] + 14); ctx2.quadraticCurveTo(124, 154, peer[0] - 17, peer[1] + 14); ctx2.stroke(); ctx2.setLineDash([]); ctx2.fillStyle = "#ef4444"; ctx2.font = "6px JetBrains Mono"; ctx2.textAlign = "center"; ctx2.fillText("shared secret (never leaves device)", 124, 160); }
+        if (step >= 7) { ctx2.fillStyle = "#10d9a0"; ctx2.font = "bold 8px JetBrains Mono"; ctx2.textAlign = "center"; ctx2.fillText("AES-GCM READY ✓", 124, 136); }
+      }
+    }
+
+    function cnode(x, y, color, lbl, active) {
+      ctx2.beginPath(); ctx2.arc(x, y, 17, 0, Math.PI * 2);
+      ctx2.fillStyle = active ? color + "16" : "#080e1c";
+      ctx2.fill();
+      ctx2.strokeStyle = active ? color : "#1a2540";
+      ctx2.lineWidth = 2; ctx2.stroke();
+      ctx2.fillStyle = active ? color : "#475a7a";
+      ctx2.font = "bold 7px JetBrains Mono";
+      ctx2.textAlign = "center"; ctx2.textBaseline = "middle";
+      ctx2.fillText(lbl, x, y);
+    }
+
+    function carrow(x1, y1, x2, y2, color) {
+      ctx2.strokeStyle = color; ctx2.lineWidth = 1.2;
+      ctx2.setLineDash([4, 3]);
+      ctx2.beginPath(); ctx2.moveTo(x1, y1); ctx2.lineTo(x2, y2); ctx2.stroke();
+      ctx2.setLineDash([]);
+    }
+
+    function flashCanvas() {
+      let a = 0;
+      const f = () => {
+        if (!ctx2) return;
+        a += 0.07;
+        ctx2.fillStyle = `rgba(16,217,160,${Math.sin(a) * 0.06})`;
+        ctx2.fillRect(0, 0, 248, 162);
+        if (a < Math.PI) requestAnimationFrame(f);
+        else drawCanvas(7);
+      };
+      f();
+    }
+  </script>
+</body>
+
+</html>
