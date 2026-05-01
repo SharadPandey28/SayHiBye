@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — DH Secure Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#07080d; --surf:#0f1018; --surf2:#151720; --bdr:#1e2030;
+  --g:#00f5a0; --b:#00d4ff; --r:#ff6b6b; --y:#ffd166;
+  --txt:#dde1f0; --dim:#4a5070;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;min-height:100vh;padding:24px 28px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--bdr);}
+
+/* ── HEADER ── */
+header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--bdr);gap:20px;flex-wrap:wrap;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:var(--g);letter-spacing:2px;}
+.logo span{color:var(--b);}
+.logo small{display:block;font-family:'JetBrains Mono',monospace;font-size:.56rem;font-weight:400;color:var(--dim);letter-spacing:3px;margin-top:3px;}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.e2e-notice{font-size:.62rem;color:var(--dim);padding:7px 14px;border:1px solid var(--bdr);border-radius:6px;max-width:380px;line-height:1.6;text-align:right;}
+.e2e-notice strong{color:var(--r);}
+.auto-pill{font-size:.58rem;color:var(--g);padding:3px 10px;border:1px solid rgba(0,245,160,.3);border-radius:20px;display:inline-flex;align-items:center;gap:5px;}
+.pulse-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;}
+.stat-label{font-size:.58rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;}
+.sv-g{color:var(--g);}
+.sv-b{color:var(--b);}
+.sv-y{color:var(--y);}
+.sv-r{color:var(--r);}
+.stat-sub{font-size:.56rem;color:var(--dim);margin-top:4px;}
+
+/* ── SECTIONS ── */
+.section{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;margin-bottom:18px;overflow:hidden;}
+.sec-hdr{padding:11px 18px;border-bottom:1px solid var(--bdr);font-size:.6rem;letter-spacing:2.5px;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.sec-hdr-left{display:flex;align-items:center;gap:10px;}
+.sec-badge{font-size:.55rem;padding:2px 8px;border-radius:20px;font-weight:700;}
+.sec-badge.green{background:rgba(0,245,160,.1);color:var(--g);border:1px solid rgba(0,245,160,.3);}
+.sec-badge.blue{background:rgba(0,212,255,.1);color:var(--b);border:1px solid rgba(0,212,255,.3);}
+.sec-badge.yellow{background:rgba(255,209,102,.1);color:var(--y);border:1px solid rgba(255,209,102,.3);}
+
+.refresh-btn{font-size:.6rem;padding:4px 12px;background:transparent;border:1px solid var(--bdr);color:var(--dim);cursor:pointer;border-radius:4px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;transition:.2s;}
+.refresh-btn:hover{border-color:var(--g);color:var(--g);}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;font-size:.68rem;}
+th{padding:9px 16px;text-align:left;font-size:.56rem;color:var(--dim);letter-spacing:2px;border-bottom:1px solid var(--bdr);text-transform:uppercase;white-space:nowrap;}
+td{padding:11px 16px;border-bottom:1px solid rgba(30,32,48,.6);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.018);}
+.room-id{color:var(--b);font-weight:700;}
+.host-name{color:var(--y);}
+.members-list{color:var(--dim);font-size:.6rem;}
+
+/* status badges */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.58rem;font-weight:700;}
+.badge.active{background:rgba(0,245,160,.12);color:var(--g);border:1px solid rgba(0,245,160,.3);}
+.badge.idle{background:rgba(74,80,112,.15);color:var(--dim);border:1px solid var(--bdr);}
+.badge.pending{background:rgba(255,209,102,.12);color:var(--y);border:1px solid rgba(255,209,102,.3);}
+.type-pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.55rem;}
+.type-pill.group{background:rgba(0,212,255,.08);color:var(--b);border:1px solid rgba(0,212,255,.25);}
+.type-pill.direct{background:rgba(0,245,160,.08);color:var(--g);border:1px solid rgba(0,245,160,.25);}
+
+/* progress bar for room capacity */
+.cap-bar{width:80px;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px;}
+.cap-fill{height:4px;border-radius:2px;background:var(--g);transition:width .3s;}
+.cap-fill.warn{background:var(--y);}
+.cap-fill.full{background:var(--r);}
+
+/* ── EVENT LOG ── */
+.event-log{max-height:300px;overflow-y:auto;padding:8px 0;}
+.ev-row{display:grid;grid-template-columns:130px 160px 120px 1fr;gap:10px;padding:6px 18px;font-size:.62rem;border-bottom:1px solid rgba(30,32,48,.4);transition:background .12s;align-items:center;}
+.ev-row:last-child{border-bottom:none;}
+.ev-row:hover{background:rgba(255,255,255,.015);}
+.ev-time{color:var(--dim);}
+.ev-event{font-weight:700;font-size:.6rem;}
+.ev-event.CONNECT{color:var(--g);}
+.ev-event.DISCONNECT{color:var(--r);}
+.ev-event.KEY_EXCHANGE{color:var(--b);}
+.ev-event.MSG_RELAYED{color:var(--y);}
+.ev-event.JOIN_REQUEST{color:#b48ead;}
+.ev-event.APPROVED{color:var(--g);}
+.ev-event.REJECTED{color:var(--r);}
+.ev-event.ROOM_CREATED{color:var(--b);}
+.ev-event.ROOM_RECYCLED{color:var(--y);}
+.ev-event.HOST_TRANSFERRED{color:var(--y);}
+.ev-event.REQUEST_CANCELLED{color:var(--dim);}
+.ev-event.CLEANUP{color:var(--dim);}
+.ev-event.REJOIN{color:#5dcaa5;}
+.ev-room{color:var(--dim);}
+.ev-detail{color:var(--txt);opacity:.55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.empty{padding:28px;text-align:center;color:var(--dim);font-size:.7rem;}
+
+/* ── HEALTH BAR ── */
+.health-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.health-chip{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--surf);border:1px solid var(--bdr);border-radius:6px;font-size:.62rem;}
+.health-chip .hc-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);}
+.health-chip .hc-dot.ok{background:var(--g);box-shadow:0 0 6px var(--g);}
+.health-chip .hc-dot.warn{background:var(--y);}
+.health-chip .hc-label{color:var(--dim);}
+.health-chip .hc-val{color:var(--txt);}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
+  <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:40px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:18px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--g);">DH<span style="color:var(--b);">SECURE</span><small style="display:block;font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--dim);letter-spacing:3px;margin-top:4px;">ADMIN DASHBOARD</small></div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div style="font-size:.58rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;">Admin Username</div>
+      <input type="text" id="admin-user" placeholder="admin" style="width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:.82rem;border-radius:8px;outline:none;" onkeydown="if(event.key==='Enter')adminLogin()"/>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div style="font-size:.58rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;">Password</div>
+      <input type="password" id="admin-pass" placeholder="••••••••" style="width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:.82rem;border-radius:8px;outline:none;" onkeydown="if(event.key==='Enter')adminLogin()"/>
+    </div>
+    <button onclick="adminLogin()" style="background:var(--g);color:#000;border:none;padding:12px;font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;letter-spacing:2px;border-radius:8px;cursor:pointer;">LOGIN →</button>
+    <div id="login-err" style="font-size:.65rem;color:var(--r);min-height:16px;"></div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard" style="display:none;">
+  <div class="logo">
+    DH<span>SECURE</span>
+    <small>ADMIN METADATA DASHBOARD</small>
+  </div>
+  <div class="hdr-right">
+    <div class="e2e-notice">
+      <strong>Zero message access.</strong> This dashboard shows metadata only —
+      connection events, room activity, counts. Message content is E2E encrypted
+      and inaccessible to the server.
+    </div>
+    <div class="auto-pill">
+      <div class="pulse-dot"></div>
+      Auto-refresh every 5s
+    </div>
+  </div>
+</header>
+
+<!-- Health chips -->
+<div class="health-row" id="health-row">
+  <div class="health-chip"><div class="hc-dot" id="srv-dot"></div><span class="hc-label">Server</span><span class="hc-val" id="srv-status">—</span></div>
+  <div class="health-chip"><div class="hc-dot" id="up-dot"></div><span class="hc-label">Uptime</span><span class="hc-val" id="srv-uptime">—</span></div>
+  <div class="health-chip"><span class="hc-label">Max rooms</span><span class="hc-val">100</span></div>
+  <div class="health-chip"><span class="hc-label">Rate limit</span><span class="hc-val">15 ev/s per socket</span></div>
+  <div class="health-chip"><span class="hc-label">Last refresh</span><span class="hc-val" id="last-refresh">—</span></div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-label">Total Connections</div>
+    <div class="stat-value sv-g" id="st-total">—</div>
+    <div class="stat-sub">since server start</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Sessions</div>
+    <div class="stat-value sv-b" id="st-active">—</div>
+    <div class="stat-sub">currently online</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Rooms</div>
+    <div class="stat-value sv-y" id="st-active-rooms">—</div>
+    <div class="stat-sub">of <span id="st-total-rooms">—</span> total</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Messages Relayed</div>
+    <div class="stat-value sv-r" id="st-msgs">—</div>
+    <div class="stat-sub">encrypted blobs only</div>
+  </div>
+</div>
+
+<!-- Rooms Table -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-hdr-left">
+      All Rooms
+      <span class="sec-badge green" id="badge-active-rooms">0 active</span>
+      <span class="sec-badge blue" id="badge-idle-rooms">0 idle</span>
+      <span class="sec-badge yellow" id="badge-pending">0 pending req</span>
+    </div>
+    <button class="refresh-btn" onclick="loadStats()">↻ Refresh</button>
+  </div>
+  <div id="rooms-body"><div class="empty">No rooms yet.</div></div>
+</div>
+
+<!-- Event Log -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-hdr-left">
+      Event Log
+      <span class="sec-badge blue" id="badge-events">0 events</span>
+    </div>
+    <span style="font-size:.58rem;color:var(--dim);">last 50 events</span>
+  </div>
+  <div class="event-log" id="event-log"><div class="empty">No events yet.</div></div>
+</div>
+
+<script>
+function fmtDuration(startIso) {
+  const ms = Date.now() - new Date(startIso).getTime();
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s/60)}m ${s%60}s`;
+  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+}
+
+function fmtUptime(sec) {
+  sec = Math.floor(sec);
+  if (sec < 60) return `${sec}s`;
+  if (sec < 3600) return `${Math.floor(sec/60)}m`;
+  return `${Math.floor(sec/3600)}h ${Math.floor((sec%3600)/60)}m`;
+}
+
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── Admin JWT auth ────────────────────────────────────────────
+let adminToken = localStorage.getItem("dh_admin_token") || "";
+
+async function adminLogin() {
+  const u = document.getElementById("admin-user")?.value.trim();
+  const p = document.getElementById("admin-pass")?.value;
+  if (!u || !p) return;
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: u, password: p }),
+  });
+  const data = await res.json();
+  if (!res.ok || data.role !== "admin") {
+    document.getElementById("login-err").textContent = data.error || "Not an admin account.";
+    return;
+  }
+  adminToken = data.token;
+  localStorage.setItem("dh_admin_token", adminToken);
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  loadHealth(); loadStats();
+}
+
+function authHeaders() {
+  return { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` };
+}
+
+async function loadHealth() {
+  try {
+    const res = await fetch("/health");
+    const data = await res.json();
+    document.getElementById("srv-dot").className = "hc-dot ok";
+    document.getElementById("srv-status").textContent = data.status;
+    document.getElementById("up-dot").className = "hc-dot ok";
+    document.getElementById("srv-uptime").textContent = fmtUptime(data.uptime);
+  } catch {
+    document.getElementById("srv-dot").className = "hc-dot warn";
+    document.getElementById("srv-status").textContent = "unreachable";
+  }
+}
+
+async function loadStats() {
+  document.getElementById("last-refresh").textContent = new Date().toLocaleTimeString();
+  if (!adminToken) return;
+
+  try {
+    const res = await fetch("/api/admin/stats", { headers: authHeaders() });
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("dh_admin_token");
+      location.reload(); return;
+    }
+
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) return;
+
+    const data = await res.json();
+
+    // ── Stat cards ──
+    document.getElementById("st-total").textContent = data.totalConnections ?? "—";
+    document.getElementById("st-active").textContent = data.activeSessions ?? "—";
+    document.getElementById("st-active-rooms").textContent = data.activeRooms ?? "—";
+    document.getElementById("st-total-rooms").textContent = data.totalRooms ?? "—";
+
+    // total messages across all rooms
+    const totalMsgs = (data.rooms || []).reduce((s, r) => s + (r.messageCount || 0), 0);
+    document.getElementById("st-msgs").textContent = totalMsgs;
+
+    // ── Badges ──
+    const rooms = data.rooms || [];
+    const activeRooms = rooms.filter(r => r.memberCount > 0);
+    const idleRooms   = rooms.filter(r => r.memberCount === 0);
+    const totalPending = rooms.reduce((s, r) => s + (r.pendingCount || 0), 0);
+
+    document.getElementById("badge-active-rooms").textContent = `${activeRooms.length} active`;
+    document.getElementById("badge-idle-rooms").textContent   = `${idleRooms.length} idle`;
+    document.getElementById("badge-pending").textContent      = `${totalPending} pending req`;
+
+    // ── Rooms table ──
+    if (rooms.length === 0) {
+      document.getElementById("rooms-body").innerHTML = '<div class="empty">No rooms yet.</div>';
+    } else {
+      // Sort: active first, then by lastActivity desc
+      const sorted = [...rooms].sort((a, b) => {
+        if (b.memberCount !== a.memberCount) return b.memberCount - a.memberCount;
+        return new Date(b.lastActivity) - new Date(a.lastActivity);
+      });
+
+      const rows = sorted.map(r => {
+        const isActive = r.memberCount > 0;
+        const capPct = r.maxMembers > 0 ? Math.round((r.memberCount / r.maxMembers) * 100) : 0;
+        const capClass = capPct >= 100 ? "full" : capPct >= 70 ? "warn" : "";
+        const lastAct = new Date(r.lastActivity).toLocaleTimeString();
+        const memberNames = (r.members || []).map(esc).join(", ") || "—";
+
+        return `
+          <tr>
+            <td><span class="room-id">${esc(r.id)}</span></td>
+            <td>
+              <span class="badge ${isActive ? "active" : "idle"}">${isActive ? "ACTIVE" : "IDLE"}</span>
+              &nbsp;
+              <span class="type-pill ${esc(r.type || "group")}">${esc(r.type || "group")}</span>
+            </td>
+            <td><span class="host-name">${esc(r.host || "—")}</span></td>
+            <td>
+              ${r.memberCount}/${r.maxMembers}
+              <div class="cap-bar"><div class="cap-fill ${capClass}" style="width:${capPct}%"></div></div>
+            </td>
+            <td>${r.pendingCount > 0 ? `<span class="badge pending">${r.pendingCount} waiting</span>` : "—"}</td>
+            <td>${r.messageCount || 0}</td>
+            <td>${fmtDuration(r.startTime)}</td>
+            <td style="color:var(--dim);font-size:.6rem;">${lastAct}</td>
+            <td class="members-list" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${memberNames}</td>
+          </tr>`;
+      }).join("");
+
+      document.getElementById("rooms-body").innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Room ID</th>
+              <th>Status</th>
+              <th>Host</th>
+              <th>Members</th>
+              <th>Pending</th>
+              <th>Messages</th>
+              <th>Duration</th>
+              <th>Last Activity</th>
+              <th>Member Names</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    // ── Event log ──
+    const events = data.recentEvents || [];
+    document.getElementById("badge-events").textContent = `${events.length} events`;
+
+    if (events.length === 0) {
+      document.getElementById("event-log").innerHTML = '<div class="empty">No events yet.</div>';
+    } else {
+      const evHtml = events.map(e => {
+        const t = new Date(e.time).toLocaleTimeString();
+        const evClass = (e.event || "").replace(/[^A-Z_]/g, "");
+        return `
+          <div class="ev-row">
+            <span class="ev-time">${t}</span>
+            <span class="ev-event ${evClass}">${esc(e.event)}</span>
+            <span class="ev-room">${esc(e.roomId)}</span>
+            <span class="ev-detail">${esc(e.detail)}</span>
+          </div>`;
+      }).join("");
+      document.getElementById("event-log").innerHTML = evHtml;
+    }
+
+  } catch (err) {
+    console.error("Failed to load admin stats:", err);
+  }
+}
+
+// Auto-login if token saved
+loadHealth();
+if (adminToken) {
+  fetch("/api/admin/stats", { headers: authHeaders() }).then(r => {
+    if (r.ok) {
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      loadStats();
+    } else { localStorage.removeItem("dh_admin_token"); adminToken = ""; }
+  }).catch(() => {});
+}
+setInterval(() => { if (adminToken) { loadHealth(); loadStats(); } }, 5000);
+</script>
+</div><!-- end dashboard -->
+
+</body>
+</html>
