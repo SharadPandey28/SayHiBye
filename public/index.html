@@ -482,7 +482,14 @@ function initSocket() {
   if (socketInited) return;
   socketInited = true;
 
-  socket = io({ auth: { token: authToken }, reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 10 });
+  socket = io("https://sayhibye.onrender.com", {
+  auth: { token: authToken },
+  transports: ["websocket"],
+  withCredentials: true,
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 10
+});
 
   socket.on("connect", () => setConn(true));
   socket.on("connect_error", (err) => {
@@ -777,7 +784,13 @@ function initSocket() {
   if (socketInited) return;
   socketInited = true;
 
-  socket = io({ reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 10 });
+  socket = io("https://sayhibye.onrender.com", {
+  transports: ["websocket"],
+  withCredentials: true,
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 10
+});
 
   socket.on("connect", () => {
     setConn(true);
