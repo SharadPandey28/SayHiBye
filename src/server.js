@@ -113,11 +113,11 @@ app.use((err, req, res, _next) => {
 // ─────────────────────────────────────────────────────────────
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://sayhibye.onrender.com", 
+    origin: "*",   // 🔥 IMPORTANT (fixes your issue)
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["websocket", "polling"], 
+  transports: ["websocket", "polling"],
   pingTimeout: 30000,
   pingInterval: 10000,
   maxHttpBufferSize: 1e5,
