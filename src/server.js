@@ -35,10 +35,16 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "fonts.gstatic.com"],
-      fontSrc: ["'self'", "fonts.gstatic.com"],
-      connectSrc: ["'self'", "wss:", "ws:"],
+
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+
+      // 👇 ADD THIS LINE
+      scriptSrcAttr: ["'unsafe-inline'"],
+
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+
+      connectSrc: ["'self'", "wss:", "ws:", "https://sayhibye.onrender.com"],
     },
   },
 }));
