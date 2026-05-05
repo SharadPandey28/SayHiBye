@@ -112,10 +112,15 @@ app.use((err, req, res, _next) => {
 //  SOCKET.IO
 // ─────────────────────────────────────────────────────────────
 const io = new Server(httpServer, {
-  cors: { origin: config.cors.origin, credentials: true },
+  cors: {
+    origin: "https://sayhibye.onrender.com", 
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ["websocket", "polling"], 
   pingTimeout: 30000,
   pingInterval: 10000,
-  maxHttpBufferSize: 1e5, // 100KB max per message
+  maxHttpBufferSize: 1e5,
 });
 
 // Auth middleware — runs before any socket connects
