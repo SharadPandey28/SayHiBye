@@ -4,15 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>DH Secure Chat</title>
-<style>
-/* ── AUTH SCREEN ── */
-.auth-toggle{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;}
-.auth-tab{flex:1;padding:9px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;cursor:pointer;background:transparent;border:none;color:var(--dim);transition:.2s;letter-spacing:1px;}
-.auth-tab.active{background:var(--g);color:#000;}
-.auth-tab.active.blue{background:var(--b);}
-.user-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:20px;background:rgba(0,245,160,.1);border:1px solid rgba(0,245,160,.25);font-size:.62rem;color:var(--g);cursor:pointer;}
-.user-pill:hover{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.3);color:var(--r);}
-</style>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root {
@@ -192,6 +183,16 @@ canvas#dhc{display:block;margin:12px auto;border-radius:6px;background:var(--bg)
 }
 #dh-toggle-btn{display:none;padding:6px 12px;font-size:.62rem;background:transparent;border:1px solid var(--bdr);color:var(--dim);border-radius:var(--rad);cursor:pointer;font-family:'JetBrains Mono',monospace;}
 </style>
+<style>
+.auth-toggle{display:flex;gap:0;margin-bottom:4px;border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;}
+.auth-tab{flex:1;padding:9px;text-align:center;font-family:"JetBrains Mono",monospace;font-size:.72rem;font-weight:700;cursor:pointer;background:transparent;border:none;color:var(--dim);transition:.2s;letter-spacing:1px;}
+.auth-tab.active{background:var(--g);color:#000;}
+input[type=password]{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:12px 15px;font-family:"JetBrains Mono",monospace;font-size:.82rem;border-radius:var(--rad);outline:none;transition:border-color .2s;}
+input[type=password]:focus{border-color:var(--g);}
+input[type=password]::placeholder{color:var(--dim);}
+.user-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:20px;background:rgba(0,245,160,.1);border:1px solid rgba(0,245,160,.25);font-size:.62rem;color:var(--g);cursor:pointer;}
+.user-pill:hover{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.3);color:var(--r);}
+</style>
 </head>
 <body>
 
@@ -200,8 +201,7 @@ canvas#dhc{display:block;margin:12px auto;border-radius:6px;background:var(--bg)
     DH<em>SECURE</em>
     <small id="algo-name-hdr">DH + SHA-256 + AES-GCM</small>
   </div>
-  <div class="hdr-r">
-    <span id="user-pill-wrap"></span>
+  <div class="hdr-r"><span id="user-pill-wrap"></span>
     <button id="dh-toggle-btn" onclick="toggleDHPanel()">⚙ keys</button>
     <span><span class="dot" id="cdot"></span><span id="clbl">offline</span></span>
     <span><span class="dot" id="kdot"></span><span id="klbl">no key</span></span>
@@ -211,7 +211,9 @@ canvas#dhc{display:block;margin:12px auto;border-radius:6px;background:var(--bg)
 <!-- ═══ ONBOARDING ═══ -->
 <div id="screens">
 
-  <!-- S0: Auth (Login / Register) -->
+  <!-- S1: Name -->
+  
+  <!-- S0: Auth -->
   <div class="screen active" id="s-auth">
     <div class="card">
       <div>
@@ -220,7 +222,7 @@ canvas#dhc{display:block;margin:12px auto;border-radius:6px;background:var(--bg)
       </div>
       <div class="auth-toggle">
         <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">LOGIN</button>
-        <button class="auth-tab blue" id="tab-register" onclick="switchAuth('register')">REGISTER</button>
+        <button class="auth-tab" id="tab-register" onclick="switchAuth('register')">REGISTER</button>
       </div>
       <div class="fl">
         <div class="lbl">Username</div>
@@ -237,8 +239,7 @@ canvas#dhc{display:block;margin:12px auto;border-radius:6px;background:var(--bg)
     </div>
   </div>
 
-  <!-- S1: Username (now auto-filled from JWT, kept for display) -->
-  <div class="screen active" id="s-name">
+<div class="screen" id="s-name">
     <div class="card">
       <div>
         <div class="card-title">Diffie–Hellman<br/><em>Secure</em> <span>Chat</span></div>
@@ -392,195 +393,7 @@ canvas#dhc{display:block;margin:12px auto;border-radius:6px;background:var(--bg)
 <script src="/crypto/provider.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  AUTH LAYER — JWT login/register before chat
-// ═══════════════════════════════════════════════════════════════
-let authToken = localStorage.getItem("dh_token") || "";
-let authMode = "login";
-
-function switchAuth(mode) {
-  authMode = mode;
-  document.getElementById("tab-login").classList.toggle("active", mode === "login");
-  document.getElementById("tab-register").classList.toggle("active", mode === "register");
-  document.getElementById("auth-btn").textContent = mode.toUpperCase();
-  hideNotice("e-auth");
-}
-
-async function doAuth() {
-  const username = sanitizeName(document.getElementById("auth-name").value.trim());
-  const password = document.getElementById("auth-pass").value;
-  if (!username) { showNotice("e-auth","err","Enter a username."); return; }
-  if (!password) { showNotice("e-auth","err","Enter a password."); return; }
-
-  document.getElementById("auth-btn").disabled = true;
-  document.getElementById("auth-btn").textContent = "…";
-
-  try {
-    const res = await fetch(`/api/auth/${authMode}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      showNotice("e-auth","err", data.errors?.[0]?.msg || data.error || "Auth failed.");
-      return;
-    }
-
-    authToken = data.token;
-    uname = data.username;
-    localStorage.setItem("dh_token", authToken);
-
-    // Show username pill in header
-    document.getElementById("user-pill-wrap").innerHTML =
-      `<span class="user-pill" onclick="logout()" title="Click to logout">👤 ${esc(uname)} ✕</span>`;
-
-    // Skip name screen — go straight to mode select
-    showScreen("s-mode");
-    document.getElementById("inp-name").value = uname;
-
-  } catch (err) {
-    showNotice("e-auth","err","Network error. Is the server running?");
-  } finally {
-    document.getElementById("auth-btn").disabled = false;
-    document.getElementById("auth-btn").textContent = authMode.toUpperCase();
-  }
-}
-
-function logout() {
-  localStorage.removeItem("dh_token");
-  authToken = "";
-  uname = "";
-  location.reload();
-}
-
-document.getElementById("auth-pass").addEventListener("keydown", e => {
-  if (e.key === "Enter") doAuth();
-});
-
-// Auto-login if token exists in localStorage
-(async function autoLogin() {
-  if (!authToken) return;
-  try {
-    const res = await fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
-    if (!res.ok) { localStorage.removeItem("dh_token"); return; }
-    const data = await res.json();
-    uname = data.username;
-    document.getElementById("user-pill-wrap").innerHTML =
-      `<span class="user-pill" onclick="logout()" title="Click to logout">👤 ${esc(uname)} ✕</span>`;
-    document.getElementById("inp-name").value = uname;
-    showScreen("s-mode");
-  } catch { /* stay on auth screen */ }
-})();
-
-// ── Override initSocket to pass JWT token ──────────────────────
-const _origInitSocket = initSocket;
-// Patch: pass token in socket handshake auth
-function initSocket() {
-  if (socketInited) return;
-  socketInited = true;
-
-  socket = io("https://sayhibye.onrender.com", {
-  auth: { token: authToken },
-  transports: ["websocket"],
-  withCredentials: true,
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionAttempts: 10
-});
-
-  socket.on("connect", () => setConn(true));
-  socket.on("connect_error", (err) => {
-    setConn(false);
-    if (err.message === "Authentication required" || err.message === "Invalid token") {
-      localStorage.removeItem("dh_token");
-      location.reload();
-    }
-  });
-  socket.on("disconnect", (reason) => {
-    setConn(false); setKey(false);
-    if (document.getElementById("main").style.display !== "none")
-      addSys(`⚠️ Disconnected (${reason}). Reconnecting…`);
-  });
-  socket.on("reconnect", async (attempt) => {
-    setConn(true);
-    addSys(`✓ Reconnected after ${attempt} attempt(s). Re-establishing keys…`);
-    const latency = await measureLatency();
-    keyPair = await CryptoRegistry.provider.generateKeyPair(latency);
-    aesKey = null; peerKeys = {}; setKey(false);
-    socket.emit("rejoin_room", { roomId, username: uname });
-    socket.emit("public_key", keyPair.publicKey);
-  });
-  socket.on("reconnect_failed", () => addSys("✗ Could not reconnect. Please refresh."));
-  socket.on("room_created", (data) => enterChat({ ...data, isHost: true }));
-  socket.on("request_approved", (data) => { clearPendingTimer(); enterChat({ ...data, isHost: false }); });
-  socket.on("request_rejected", ({ reason }) => {
-    clearPendingTimer();
-    showNotice("e-pending","err", reason || "Your request was rejected.");
-    document.getElementById("pending-msg").textContent = "Entry denied.";
-    document.querySelector("#s-pending .btn-r").textContent = "TRY AGAIN";
-    document.querySelector("#s-pending .btn-r").onclick = () => location.reload();
-  });
-  socket.on("create_error", (msg) => {
-    showScreen("s-mode"); document.getElementById("screens").style.display = "flex";
-    showNotice("e-mode","err", msg);
-  });
-  socket.on("join_error", (msg) => { clearPendingTimer(); showNotice("e-pending","err", msg); });
-  socket.on("peer_joined", ({ username, currentMembers, maxMembers: mx }) => {
-    addChip(username, false); updateCount(currentMembers, mx);
-    addSys(`${esc(username)} joined the room`);
-    socket.emit("public_key", keyPair.publicKey);
-  });
-  socket.on("peer_key", async ({ key: pkStr, username: pName }) => {
-    stepOn(5); document.getElementById("v5").textContent = `${esc(pName)}: received`;
-    stepOn(6);
-    const secret = await CryptoRegistry.provider.computeSecret(pkStr, keyPair.privateKey);
-    document.getElementById("v6").textContent = `S computed ✓`;
-    stepOn(7);
-    const derived = await CryptoRegistry.provider.deriveAESKey(secret);
-    peerKeys[pName] = derived; aesKey = derived;
-    document.getElementById("v7").textContent = `${meta.kdf} → AES-GCM [${Object.keys(peerKeys).length}] ✓`;
-    setKey(true); enableChat(); addSys(`🔐 Secure channel ready with ${esc(pName)}`);
-    flashCanvas();
-    document.getElementById("wt-peer").style.display = "none";
-    document.getElementById("messages").style.display = "flex";
-    setTimeout(() => document.getElementById("msg-input").focus(), 100);
-  });
-  socket.on("message", async ({ iv, data, senderName }) => {
-    const key = peerKeys[senderName] || aesKey; if (!key) return;
-    try { addMsg("peer", await CryptoRegistry.provider.decrypt({ iv, data }, key), senderName); }
-    catch { addSys("⚠️ Decryption failed."); }
-  });
-  socket.on("peer_left", ({ username }) => {
-    addSys(`${esc(username)} left`); markChipOffline(username); delete peerKeys[username];
-    if (!Object.keys(peerKeys).length) { disableChat(); setKey(false); }
-  });
-  socket.on("host_changed", ({ newHost }) => {
-    addSys(`👑 ${esc(newHost)} is now the host`);
-    if (newHost === uname) {
-      isHost = true;
-      document.getElementById("host-lbl").style.display = "inline";
-      document.getElementById("approval-panel").classList.add("show");
-    }
-  });
-  socket.on("join_request", ({ reqId, username, socketId }) => showJoinRequest(reqId, username, socketId));
-  socket.on("request_cancelled", ({ socketId, username }) => {
-    document.getElementById(`req-${socketId}`)?.remove(); updateReqCount();
-    addSys(`${esc(username)} cancelled their join request`);
-  });
-  socket.on("room_full", ({ memberNames }) => addSys(`🔒 Room full: ${memberNames.map(esc).join(", ")}`));
-  socket.on("typing", ({ username: tn }) => {
-    if (tn !== uname) {
-      document.getElementById("typing-indicator").textContent = `${esc(tn)} is typing…`;
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => { document.getElementById("typing-indicator").textContent = ""; }, 2500);
-    }
-  });
-  socket.on("name_taken", () => showNotice("e-pending","err","That name is already taken in this room."));
-}
-
+//  APP — uses CryptoRegistry.provider exclusively
 //  No raw crypto calls here. Everything goes through the provider.
 // ═══════════════════════════════════════════════════════════════
 
@@ -635,7 +448,7 @@ function goMode() {
   hideNotice("e-name");
   showScreen("s-mode");
 }
-function goName() { showScreen("s-name"); }
+function goName() { showScreen("s-auth"); }
 
 document.getElementById("inp-name").addEventListener("keydown", e => { if(e.key==="Enter") goMode(); });
 
@@ -784,17 +597,20 @@ function initSocket() {
   if (socketInited) return;
   socketInited = true;
 
-  socket = io("https://sayhibye.onrender.com", {
-  transports: ["websocket"],
-  withCredentials: true,
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionAttempts: 10
-});
+  socket = io({ auth: { token: authToken || "" }, reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 10 });
 
   socket.on("connect", () => {
     setConn(true);
     console.log("[Socket] Connected:", socket.id);
+  });
+
+  socket.on("connect_error", (err) => {
+    setConn(false);
+    console.error("[Socket] Error:", err.message);
+    if (err.message === "Authentication required" || err.message === "Invalid token") {
+      localStorage.removeItem("dh_token");
+      location.reload();
+    }
   });
 
   socket.on("disconnect", (reason) => {
@@ -1147,6 +963,75 @@ function drawCanvas(step) {
 function cnode(x,y,color,lbl,active){ctx2.beginPath();ctx2.arc(x,y,18,0,Math.PI*2);ctx2.fillStyle=active?color+"22":"#0f1018";ctx2.fill();ctx2.strokeStyle=active?color:"#1e2030";ctx2.lineWidth=2;ctx2.stroke();ctx2.fillStyle=active?color:"#4a5070";ctx2.font="bold 8px JetBrains Mono";ctx2.textAlign="center";ctx2.textBaseline="middle";ctx2.fillText(lbl,x,y);}
 function carrow(x1,y1,x2,y2,color){ctx2.strokeStyle=color;ctx2.lineWidth=1.2;ctx2.setLineDash([4,3]);ctx2.beginPath();ctx2.moveTo(x1,y1);ctx2.lineTo(x2,y2);ctx2.stroke();ctx2.setLineDash([]);}
 function flashCanvas(){let a=0;const f=()=>{if(!ctx2)return;a+=0.07;ctx2.fillStyle=`rgba(0,245,160,${Math.sin(a)*.07})`;ctx2.fillRect(0,0,264,180);if(a<Math.PI)requestAnimationFrame(f);else drawCanvas(7);};f();}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH SYSTEM
+// ═══════════════════════════════════════════════════════
+let authToken = localStorage.getItem("dh_token") || "";
+let authMode = "login";
+
+function switchAuth(m) {
+  authMode = m;
+  document.getElementById("tab-login").classList.toggle("active", m==="login");
+  document.getElementById("tab-register").classList.toggle("active", m==="register");
+  document.getElementById("auth-btn").textContent = m.toUpperCase();
+  hideNotice("e-auth");
+}
+
+async function doAuth() {
+  const username = sanitizeName(document.getElementById("auth-name").value.trim());
+  const password = document.getElementById("auth-pass").value;
+  if (!username) { showNotice("e-auth","err","Enter a username."); return; }
+  if (password.length < 6) { showNotice("e-auth","err","Password must be 6+ characters."); return; }
+  const btn = document.getElementById("auth-btn");
+  btn.disabled = true; btn.textContent = "…";
+  try {
+    const res = await fetch("/api/auth/" + authMode, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showNotice("e-auth","err", data.errors?.[0]?.msg || data.error || "Auth failed.");
+      return;
+    }
+    authToken = data.token;
+    uname = data.username;
+    localStorage.setItem("dh_token", authToken);
+    document.getElementById("inp-name").value = uname;
+    document.getElementById("user-pill-wrap").innerHTML =
+      `<span class="user-pill" onclick="logout()" title="Logout">👤 ${esc(uname)} ✕</span>`;
+    showScreen("s-mode");
+  } catch {
+    showNotice("e-auth","err","Network error. Check your connection.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode.toUpperCase();
+  }
+}
+
+function logout() { localStorage.removeItem("dh_token"); location.reload(); }
+function goName() { showScreen("s-auth"); }
+
+document.getElementById("auth-pass").addEventListener("keydown", e => { if(e.key==="Enter") doAuth(); });
+document.getElementById("auth-name").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("auth-pass").focus(); });
+
+// Auto-login on page load if token exists
+(async function autoLogin() {
+  if (!authToken) return;
+  try {
+    const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + authToken } });
+    if (!res.ok) { localStorage.removeItem("dh_token"); authToken = ""; return; }
+    const data = await res.json();
+    uname = data.username;
+    document.getElementById("inp-name").value = uname;
+    document.getElementById("user-pill-wrap").innerHTML =
+      `<span class="user-pill" onclick="logout()" title="Logout">👤 ${esc(uname)} ✕</span>`;
+    showScreen("s-mode");
+  } catch { /* stay on auth screen */ }
+})();
+
 </script>
 </body>
 </html>
